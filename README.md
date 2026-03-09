@@ -118,6 +118,14 @@ faster and spend less time on repetitive review work.
 `ai-agent` `open-source` `research-assistant` `paper-tracking` `llm`
 `summarization` `translation` `nextjs` `fastapi` `open-core`
 
+## Star History
+
+<p align="center">
+  <a href="https://www.star-history.com/#JessyTsui/scivly&Date">
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=JessyTsui/scivly&type=Date" />
+  </a>
+</p>
+
 ## License
 
 Scivly is licensed under [Apache 2.0](./LICENSE).
