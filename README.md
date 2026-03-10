@@ -68,6 +68,18 @@ config/       Public-safe config defaults and templates
 scripts/      Bootstrap and local utility scripts
 ```
 
+## Local Development
+
+- `./rebuild.sh` removes generated frontend and backend caches, reinstalls dependencies, and starts the available development servers
+- `./rebuild.sh --fast` skips dependency reinstall for quicker local restarts
+- `./rebuild.sh --no-start` performs the cleanup and install steps without launching dev servers
+
+## Deploy on Vercel
+
+- import the repository into Vercel
+- set the project Root Directory to `frontend`
+- keep the framework preset as Next.js and use the checked-in `frontend/vercel.json`
+
 ## Core Docs
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md)

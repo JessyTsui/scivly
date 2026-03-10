@@ -1,0 +1,15 @@
+{
+  "name": "scivly",
+  "private": true,
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "rebuild": "./rebuild.sh",
+    "rebuild:fast": "./rebuild.sh --fast"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

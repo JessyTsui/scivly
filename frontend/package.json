@@ -1,0 +1,36 @@
+{
+  "name": "scivly-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "This directory is reserved for the Scivly web app.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "serve dist -l 3000",
+    "preview": "npm run build && serve dist -l 3000",
+    "screenshot": "node scripts/screenshot.js",
+    "screenshot:all": "node scripts/screenshot.js all"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "lucide-react": "^0.577.0",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^25.4.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "playwright": "^1.58.2",
+    "serve": "^14.2.6",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  }
+}
