@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -60,7 +60,7 @@ async def run(args: argparse.Namespace) -> dict[str, Any]:
     if not args.categories and not args.query:
         raise ValueError("Pass at least one --categories value or provide --query")
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     date_from = now - timedelta(days=args.days)
     profile = build_profile(args)
 

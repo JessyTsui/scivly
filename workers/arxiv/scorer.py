@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import re
 from collections.abc import Iterable, Sequence
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .models import ArxivPaper, ComponentScores, ScoringProfile, ScoringResult
@@ -385,7 +385,7 @@ class MetadataScorer:
         ) else 0.0
         category_alignment = 1.0 if paper.primary_category in self.profile.categories else 0.0
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         age_days = max((now - paper.updated).total_seconds() / 86_400, 0.0)
         freshness = _clamp(0.0, 1.0, 1 - (age_days / 7))
 

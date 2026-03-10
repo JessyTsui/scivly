@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Final
 from urllib.parse import urlencode
 from xml.etree import ElementTree
@@ -17,7 +17,7 @@ ATOM_NS: Final = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.
 
 
 def _parse_datetime(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
 
 
 def _text_or_none(element: ElementTree.Element | None) -> str | None:
@@ -115,7 +115,7 @@ class ArxivClient:
         query: str | None = None,
         max_results: int = 100,
     ) -> list[ArxivPaper]:
-        date_to = datetime.now(UTC)
+        date_to = datetime.now(timezone.utc)
         date_from = date_to.replace(microsecond=0) - timedelta(days=days)
         return await self.search(
             categories=categories,
@@ -172,8 +172,8 @@ class ArxivClient:
             sanitized = " ".join(query.replace('"', " ").split())
             clauses.append(f'all:"{sanitized}"')
         if date_from or date_to:
-            start = (date_from or datetime(1991, 1, 1, tzinfo=UTC)).strftime("%Y%m%d%H%M")
-            end = (date_to or datetime.now(UTC)).strftime("%Y%m%d%H%M")
+            start = (date_from or datetime(1991, 1, 1, tzinfo=timezone.utc)).strftime("%Y%m%d%H%M")
+            end = (date_to or datetime.now(timezone.utc)).strftime("%Y%m%d%H%M")
             clauses.append(f"submittedDate:[{start} TO {end}]")
         return " AND ".join(clauses)
 

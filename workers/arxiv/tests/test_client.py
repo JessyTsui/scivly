@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from workers.arxiv.client import ArxivClient
 from workers.arxiv.models import ArxivPaper, AuthorInfo
@@ -58,12 +58,12 @@ def test_filter_by_date_respects_bounds() -> None:
 
     filtered = client._filter_by_date(
         papers,
-        date_from=datetime(2026, 3, 10, 8, 30, tzinfo=UTC),
-        date_to=datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
+        date_from=datetime(2026, 3, 10, 8, 30, tzinfo=timezone.utc),
+        date_to=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
     )
 
     assert len(filtered) == 1
-    assert filtered[0].published == datetime(2026, 3, 10, 9, 0, tzinfo=UTC)
+    assert filtered[0].published == datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc)
 
 
 def test_search_continues_pagination_when_first_filtered_page_is_empty() -> None:
@@ -90,8 +90,8 @@ def test_search_continues_pagination_when_first_filtered_page_is_empty() -> None
                         comment=None,
                         journal_ref=None,
                         doi=None,
-                        published=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
-                        updated=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
+                        published=datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc),
+                        updated=datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc),
                     )
                 ]
             return [
@@ -106,8 +106,8 @@ def test_search_continues_pagination_when_first_filtered_page_is_empty() -> None
                     comment=None,
                     journal_ref=None,
                     doi=None,
-                    published=datetime(2026, 3, 10, 9, 0, tzinfo=UTC),
-                    updated=datetime(2026, 3, 10, 9, 0, tzinfo=UTC),
+                    published=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                    updated=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
                 )
             ]
 
@@ -115,8 +115,8 @@ def test_search_continues_pagination_when_first_filtered_page_is_empty() -> None
     papers = asyncio.run(
         client.search(
             categories=["cs.CL"],
-            date_from=datetime(2026, 3, 10, 0, 0, tzinfo=UTC),
-            date_to=datetime(2026, 3, 10, 23, 59, tzinfo=UTC),
+            date_from=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
+            date_to=datetime(2026, 3, 10, 23, 59, tzinfo=timezone.utc),
             max_results=1,
             page_size=1,
         )

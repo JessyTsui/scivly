@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import sys
 
@@ -36,7 +36,7 @@ def sample_profile() -> ScoringProfile:
 
 @pytest.fixture
 def high_signal_paper() -> ArxivPaper:
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     return ArxivPaper(
         arxiv_id="2503.12345",
         version=1,
@@ -61,7 +61,7 @@ def high_signal_paper() -> ArxivPaper:
 
 @pytest.fixture
 def similar_same_day_paper() -> ArxivPaper:
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     return ArxivPaper(
         arxiv_id="2503.12346",
         version=1,
@@ -85,7 +85,7 @@ def similar_same_day_paper() -> ArxivPaper:
 
 @pytest.fixture
 def withdrawn_paper() -> ArxivPaper:
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     return ArxivPaper(
         arxiv_id="2503.20000",
         version=1,
@@ -106,7 +106,7 @@ def withdrawn_paper() -> ArxivPaper:
 
 @pytest.fixture
 def short_abstract_paper() -> ArxivPaper:
-    now = datetime.now(UTC).replace(microsecond=0)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     return ArxivPaper(
         arxiv_id="2503.30000",
         version=1,
