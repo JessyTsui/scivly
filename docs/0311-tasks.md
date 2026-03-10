@@ -507,7 +507,8 @@
 
 ```
 A1, A2, A3               — no dependencies
-B1, B2, B3               — no dependencies (but B2 ideally after B1+B3)
+B1, B3                   — no dependencies
+B2                       — depends on B1 + B3
 C1                       — depends on B3
 C2                       — depends on C1
 C3                       — depends on C2
@@ -552,7 +553,7 @@ G3                       — depends on B1 + B3
 | wt-b3 | 🔲 B3: Database Connection | SQLAlchemy, migrations, Docker Compose |
 | wt-f1 | 🔲 F1: Landing Page | Public marketing pages (no auth needed) |
 
-> **Notes**: A1-A3, B1, B3, F1 all have零依赖，可以全部并行。B2 需要等 B1+B3 完成后才能做（前后端对接需要 auth 和真实数据库）。Codex Review workflow 已创建 ✅。
+> **Notes**: A1-A3, B1, B3, F1 all have zero mutual dependencies and can run in parallel. B2 (Frontend-Backend Wiring) is deferred to Round 2 because it requires B1 (auth tokens) and B3 (real database). Codex Review workflow already created ✅.
 
 ---
 
