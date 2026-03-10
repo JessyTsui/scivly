@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 import re
-from collections import Counter
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
 from typing import Any
@@ -39,6 +38,12 @@ ACTIONABILITY_PATTERNS: dict[str, tuple[str, ...]] = {
     "dataset_release_language": ("dataset", "corpus", "release", "data collection"),
     "accepted_to_venue_comment": ("accepted to", "to appear in", "camera ready", "best paper"),
     "survey_or_tutorial": ("survey", "tutorial", "review"),
+}
+
+COMMENT_ONLY_ACTIONABILITY_SIGNALS = {
+    "project_page_in_comment",
+    "code_release_in_comment",
+    "accepted_to_venue_comment",
 }
 
 OUT_OF_SCOPE_PATTERNS = (
@@ -333,16 +338,24 @@ class MetadataScorer:
 
     def _score_actionability(self, paper: ArxivPaper) -> tuple[float, dict[str, Any]]:
         budget = float(self.point_budget.get("actionability", 15))
-        raw_text = _normalize_text(f"{paper.comment or ''} {paper.title} {paper.abstract}")
-        normalized_text = _normalize_key(raw_text)
+        comment_text = _normalize_text(paper.comment or "")
+        metadata_text = _normalize_text(f"{paper.title} {paper.abstract}")
+        normalized_comment_text = _normalize_key(comment_text)
+        normalized_metadata_text = _normalize_key(metadata_text)
         matched_signals: list[str] = []
         matched_strength = 0.0
 
         for signal_name, weight in self.actionability_config.items():
             patterns = ACTIONABILITY_PATTERNS.get(signal_name, ())
+            target_text = comment_text if signal_name in COMMENT_ONLY_ACTIONABILITY_SIGNALS else metadata_text
+            normalized_target_text = (
+                normalized_comment_text
+                if signal_name in COMMENT_ONLY_ACTIONABILITY_SIGNALS
+                else normalized_metadata_text
+            )
             if patterns and any(
-                pattern in raw_text if any(marker in pattern for marker in ("://", ".com", ".io", ".ai"))
-                else _contains_phrase(normalized_text, pattern)
+                pattern in target_text if any(marker in pattern for marker in ("://", ".com", ".io", ".ai"))
+                else _contains_phrase(normalized_target_text, pattern)
                 for pattern in patterns
             ):
                 matched_signals.append(signal_name)

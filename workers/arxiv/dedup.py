@@ -103,7 +103,7 @@ def deduplicate_papers(papers: Iterable[ArxivPaper]) -> list[DeduplicationRecord
             DeduplicationRecord(
                 canonical_id=canonical_id,
                 merged_versions=merged_versions,
-                source_ids=[f"{canonical_id}v{paper.version}" for paper in ordered_group],
+                source_ids=list(dict.fromkeys(f"{canonical_id}v{paper.version}" for paper in ordered_group)),
                 paper=merged_paper,
             )
         )

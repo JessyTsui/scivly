@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from xml.etree import ElementTree
 
 import httpx
+from pydantic import ValidationError
 
 from .dedup import canonicalize_arxiv_id, extract_version
 from .models import ArxivPaper, AuthorInfo
@@ -84,15 +85,24 @@ class ArxivClient:
                 start=start,
                 max_results=batch_size,
             )
-            batch = self._parse_feed(xml_payload)
+            raw_batch = self._parse_feed(xml_payload)
+            raw_batch_size = len(raw_batch)
+            batch = raw_batch
             if date_from or date_to:
                 batch = self._filter_by_date(batch, date_from=date_from, date_to=date_to)
             if not batch:
-                break
+                if raw_batch_size == 0:
+                    break
+                if date_from and raw_batch and max(paper.published for paper in raw_batch) < date_from:
+                    break
+                if raw_batch_size < batch_size:
+                    break
+                start += raw_batch_size
+                continue
             papers.extend(batch)
-            if len(batch) < batch_size:
+            if raw_batch_size < batch_size:
                 break
-            start += batch_size
+            start += raw_batch_size
             remaining = max_results - len(papers)
 
         return papers[:max_results]
@@ -194,40 +204,42 @@ class ArxivClient:
             published = _text_or_none(entry.find("atom:published", ATOM_NS))
             if not raw_id or not title or not abstract or not updated or not published:
                 continue
+            try:
+                authors = []
+                for author in entry.findall("atom:author", ATOM_NS):
+                    name = _text_or_none(author.find("atom:name", ATOM_NS))
+                    if not name:
+                        continue
+                    affiliation = _text_or_none(author.find("arxiv:affiliation", ATOM_NS))
+                    authors.append(AuthorInfo(name=name, affiliation=affiliation))
 
-            authors = []
-            for author in entry.findall("atom:author", ATOM_NS):
-                name = _text_or_none(author.find("atom:name", ATOM_NS))
-                if not name:
+                categories = [
+                    category.attrib["term"].strip()
+                    for category in entry.findall("atom:category", ATOM_NS)
+                    if category.attrib.get("term")
+                ]
+                primary_category = entry.find("arxiv:primary_category", ATOM_NS)
+                primary_term = primary_category.attrib.get("term") if primary_category is not None else None
+                primary_category_value = primary_term or (categories[0] if categories else "")
+                if not primary_category_value:
                     continue
-                affiliation = _text_or_none(author.find("arxiv:affiliation", ATOM_NS))
-                authors.append(AuthorInfo(name=name, affiliation=affiliation))
 
-            categories = [
-                category.attrib["term"].strip()
-                for category in entry.findall("atom:category", ATOM_NS)
-                if category.attrib.get("term")
-            ]
-            primary_category = entry.find("arxiv:primary_category", ATOM_NS)
-            primary_term = primary_category.attrib.get("term") if primary_category is not None else None
-            primary_category_value = primary_term or (categories[0] if categories else "")
-            if not primary_category_value:
-                continue
-
-            papers.append(
-                ArxivPaper(
-                    arxiv_id=canonicalize_arxiv_id(raw_id),
-                    version=extract_version(raw_id),
-                    title=title,
-                    abstract=abstract,
-                    authors=authors,
-                    categories=categories,
-                    primary_category=primary_category_value,
-                    comment=_text_or_none(entry.find("arxiv:comment", ATOM_NS)),
-                    journal_ref=_text_or_none(entry.find("arxiv:journal_ref", ATOM_NS)),
-                    doi=_text_or_none(entry.find("arxiv:doi", ATOM_NS)),
-                    published=_parse_datetime(published),
-                    updated=_parse_datetime(updated),
+                papers.append(
+                    ArxivPaper(
+                        arxiv_id=canonicalize_arxiv_id(raw_id),
+                        version=extract_version(raw_id),
+                        title=title,
+                        abstract=abstract,
+                        authors=authors,
+                        categories=categories,
+                        primary_category=primary_category_value,
+                        comment=_text_or_none(entry.find("arxiv:comment", ATOM_NS)),
+                        journal_ref=_text_or_none(entry.find("arxiv:journal_ref", ATOM_NS)),
+                        doi=_text_or_none(entry.find("arxiv:doi", ATOM_NS)),
+                        published=_parse_datetime(published),
+                        updated=_parse_datetime(updated),
+                    )
                 )
-            )
+            except (TypeError, ValidationError, ValueError):
+                continue
         return papers

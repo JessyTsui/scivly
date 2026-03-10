@@ -18,3 +18,15 @@ def test_deduplicate_papers_merges_versions_and_crosslists(versioned_crosslist_p
     assert record.paper.version == 2
     assert set(record.paper.categories) == {"cs.CL", "cs.AI", "cs.IR"}
     assert record.source_ids == ["2503.12345v2", "2503.12345v1"]
+
+
+def test_deduplicate_papers_deduplicates_repeated_source_versions(high_signal_paper) -> None:
+    papers = [
+        high_signal_paper.model_copy(update={"arxiv_id": "2503.12345v1"}),
+        high_signal_paper.model_copy(update={"arxiv_id": "2503.12345v1"}),
+    ]
+
+    deduped = deduplicate_papers(papers)
+
+    assert len(deduped) == 1
+    assert deduped[0].source_ids == ["2503.12345v1"]

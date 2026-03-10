@@ -43,3 +43,24 @@ def test_negative_keyword_profile_conflict_applies_penalty(sample_profile, high_
 
     assert result.component_scores.penalties < 0
     assert "penalty:keyword_profile_conflict" in result.matched_rules
+
+
+def test_actionability_comment_only_signals_do_not_trigger_from_abstract(
+    sample_profile,
+    high_signal_paper,
+) -> None:
+    paper = high_signal_paper.model_copy(
+        update={
+            "comment": None,
+            "abstract": (
+                high_signal_paper.abstract
+                + " We discuss implementation details extensively but do not release code."
+            ),
+        }
+    )
+    scorer = MetadataScorer(profile=sample_profile)
+
+    result = scorer.score_paper(paper, cohort=[paper])
+
+    assert "actionability:code_release_in_comment" not in result.matched_rules
+    assert "actionability:project_page_in_comment" not in result.matched_rules
