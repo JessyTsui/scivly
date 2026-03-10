@@ -80,4 +80,5 @@ def update_api_key(
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_api_key(key_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_api_key(key_id)
+    API_KEYS.pop(key_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

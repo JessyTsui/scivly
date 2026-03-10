@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from app.routers.workspaces import WORKSPACES
 
 
 def test_health_returns_ok(client: TestClient) -> None:
@@ -77,3 +78,19 @@ def test_openapi_version_matches_health_version(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.json()["info"]["version"] == "0.1.0"
+
+
+def test_delete_workspace_removes_it_from_follow_up_reads(client: TestClient) -> None:
+    workspace_id = "33333333-3333-3333-3333-333333333333"
+    original_workspace = WORKSPACES.copy()
+
+    try:
+        delete_response = client.delete(f"/workspaces/{workspace_id}")
+        assert delete_response.status_code == 204
+
+        get_response = client.get(f"/workspaces/{workspace_id}")
+        assert get_response.status_code == 404
+        assert get_response.json()["error"] == "workspace_not_found"
+    finally:
+        WORKSPACES.clear()
+        WORKSPACES.update(original_workspace)

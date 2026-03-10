@@ -94,4 +94,5 @@ def update_workspace(
 @router.delete("/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_workspace(workspace_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_workspace(workspace_id)
+    WORKSPACES.pop(workspace_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

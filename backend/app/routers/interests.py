@@ -117,6 +117,7 @@ def update_topic_profile(
 @router.delete("/topic-profiles/{profile_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_topic_profile(profile_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_profile(profile_id)
+    TOPIC_PROFILES.pop(profile_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -163,4 +164,5 @@ def update_author_watchlist(
 @router.delete("/author-watchlists/{watchlist_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_author_watchlist(watchlist_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_watchlist(watchlist_id)
+    AUTHOR_WATCHLISTS.pop(watchlist_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

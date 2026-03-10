@@ -118,6 +118,7 @@ def update_schedule(
 @router.delete("/schedules/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_schedule(schedule_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_schedule(schedule_id)
+    SCHEDULES.pop(schedule_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

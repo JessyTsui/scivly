@@ -84,4 +84,5 @@ def update_webhook(
 @router.delete("/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_webhook(webhook_id: UUID, _: UserOut = Depends(get_current_user)) -> Response:
     _get_webhook(webhook_id)
+    WEBHOOKS.pop(webhook_id, None)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
