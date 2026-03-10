@@ -8,9 +8,12 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from threading import Condition
-from typing import Deque
+from typing import Any, Deque
 
-from redis import Redis
+try:
+    from redis import Redis as RedisClient
+except ModuleNotFoundError:  # pragma: no cover - depends on local optional dependency state
+    RedisClient = None
 
 from .task import TaskPayload, TaskResult, TaskStatus, TaskType
 
@@ -157,7 +160,7 @@ class RedisTaskQueue(TaskQueue):
         super().__init__(max_attempts=max_attempts)
         self.redis_url = redis_url or os.getenv("REDIS_URL", DEFAULT_REDIS_URL)
         self.prefix = prefix
-        self.client = Redis.from_url(self.redis_url, decode_responses=True)
+        self.client = self._build_client()
 
     def enqueue(self, task: TaskPayload) -> str:
         task_id = str(task.task_id)
@@ -232,6 +235,14 @@ class RedisTaskQueue(TaskQueue):
             raise KeyError(f"Task {task_id} was not found")
         return TaskStatus(status)
 
+    def _build_client(self) -> Any:
+        if RedisClient is None:
+            raise ModuleNotFoundError(
+                "redis is required for the Redis queue backend. Install workers/requirements.txt "
+                "or set SCIVLY_QUEUE_BACKEND=memory."
+            )
+        return RedisClient.from_url(self.redis_url, decode_responses=True)
+
     def _task_key(self, task_id: str) -> str:
         return f"{self.prefix}:task:{task_id}"
 
@@ -240,7 +251,6 @@ class RedisTaskQueue(TaskQueue):
 
     def _dead_letter_key(self, task_type: str | TaskType) -> str:
         return f"{self.prefix}:dead:{normalize_task_type(task_type)}"
-
 
 
 def build_task_queue(
