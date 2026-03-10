@@ -1,0 +1,135 @@
+version: 1
+kind: lab_priors
+description: soft tiers for common academic labs, institutes, and industry research orgs in AI
+
+tiers:
+  frontier:
+    score: 1.00
+    description: globally visible labs with sustained frontier AI output
+  leading:
+    score: 0.82
+    description: strong labs or institutes with frequent high-impact work
+  strong:
+    score: 0.64
+    description: recognized labs worth a moderate prior boost
+  tracked:
+    score: 0.48
+    description: organizations worth alias resolution with small boosts
+
+labs:
+  - name: OpenAI
+    tier: frontier
+    kind: industry
+    aliases: [OpenAI]
+  - name: Google DeepMind
+    tier: frontier
+    kind: industry
+    aliases: [Google DeepMind, DeepMind]
+  - name: Anthropic
+    tier: frontier
+    kind: industry
+    aliases: [Anthropic]
+  - name: Meta FAIR
+    tier: frontier
+    kind: industry
+    aliases: [Meta FAIR, Facebook AI Research]
+  - name: Microsoft Research
+    tier: frontier
+    kind: industry
+    aliases: [Microsoft Research, MSR]
+  - name: NVIDIA Research
+    tier: frontier
+    kind: industry
+    aliases: [NVIDIA Research, Nvidia Research]
+  - name: Allen Institute for AI
+    tier: frontier
+    kind: institute
+    aliases: [Allen Institute for AI, AI2]
+  - name: Berkeley AI Research
+    tier: frontier
+    kind: academic
+    aliases: [BAIR, Berkeley AI Research]
+  - name: Stanford HAI
+    tier: frontier
+    kind: academic
+    aliases: [Stanford HAI, Human-Centered AI]
+  - name: MIT CSAIL
+    tier: frontier
+    kind: academic
+    aliases: [MIT CSAIL, CSAIL]
+  - name: Mila
+    tier: frontier
+    kind: institute
+    aliases: [Mila, Quebec AI Institute]
+  - name: Vector Institute
+    tier: frontier
+    kind: institute
+    aliases: [Vector Institute]
+  - name: Princeton NLP
+    tier: leading
+    kind: academic
+    aliases: [Princeton NLP]
+  - name: Oxford VGG
+    tier: leading
+    kind: academic
+    aliases: [Oxford VGG, Visual Geometry Group]
+  - name: Google Research
+    tier: leading
+    kind: industry
+    aliases: [Google Research]
+  - name: Amazon AGI
+    tier: leading
+    kind: industry
+    aliases: [Amazon AGI, Amazon Artificial General Intelligence]
+  - name: Apple Machine Learning Research
+    tier: leading
+    kind: industry
+    aliases: [Apple Machine Learning Research, Apple ML Research]
+  - name: Adobe Research
+    tier: leading
+    kind: industry
+    aliases: [Adobe Research]
+  - name: Shanghai AI Laboratory
+    tier: leading
+    kind: institute
+    aliases: [Shanghai AI Laboratory, Shanghai AI Lab]
+  - name: Beijing Academy of Artificial Intelligence
+    tier: leading
+    kind: institute
+    aliases: [BAAI, Beijing Academy of Artificial Intelligence]
+  - name: Huawei Noah's Ark Lab
+    tier: strong
+    kind: industry
+    aliases: [Huawei Noah's Ark Lab, Noah's Ark Lab]
+  - name: Alibaba DAMO Academy
+    tier: strong
+    kind: industry
+    aliases: [Alibaba DAMO Academy, DAMO Academy]
+  - name: ByteDance Seed
+    tier: strong
+    kind: industry
+    aliases: [ByteDance Seed]
+  - name: Tencent ARC Lab
+    tier: strong
+    kind: industry
+    aliases: [Tencent ARC Lab]
+  - name: SenseTime Research
+    tier: strong
+    kind: industry
+    aliases: [SenseTime Research]
+  - name: CMU Machine Learning Department
+    tier: strong
+    kind: academic
+    aliases: [CMU Machine Learning Department, CMU MLD]
+  - name: Cambridge Machine Learning Group
+    tier: strong
+    kind: academic
+    aliases: [Cambridge Machine Learning Group]
+  - name: Tsinghua KEG
+    tier: tracked
+    kind: academic
+    aliases: [Tsinghua KEG]
+  - name: Peking University NLP Group
+    tier: tracked
+    kind: academic
+    aliases: [Peking University NLP Group, PKU NLP]

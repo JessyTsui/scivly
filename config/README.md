@@ -14,6 +14,7 @@ Recommended files:
 - `base.yaml` for shared defaults
 - `development.yaml` for local-safe overrides
 - `production.yaml` for public production-safe overrides
+- `reference/` for public-safe scoring defaults and editable seed dictionaries
 
 Consumption model:
 
@@ -29,3 +30,5 @@ Do not put secrets here:
 - webhook signing secrets
 - private tuned prompt contents
 
+For paper triage specifically, keep public-safe defaults and soft priors in
+[`reference/`](./reference/README.md) instead of burying them inside code or env vars.

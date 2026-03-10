@@ -1,0 +1,133 @@
+version: 1
+kind: institution_priors
+description: soft tiers for common AI-heavy universities and research institutions
+
+tiers:
+  frontier:
+    score: 1.00
+    description: globally dominant institutions with broad, sustained AI output
+  leading:
+    score: 0.82
+    description: strong institutions with frequent top-tier AI output
+  strong:
+    score: 0.64
+    description: reliable institutions worth a moderate prior boost
+  tracked:
+    score: 0.48
+    description: institutions to normalize and recognize without large boosts
+
+institutions:
+  - name: Stanford University
+    tier: frontier
+    aliases: [Stanford, Stanford University]
+  - name: Massachusetts Institute of Technology
+    tier: frontier
+    aliases: [MIT, Massachusetts Institute of Technology]
+  - name: Carnegie Mellon University
+    tier: frontier
+    aliases: [CMU, Carnegie Mellon University]
+  - name: University of California, Berkeley
+    tier: frontier
+    aliases: [UC Berkeley, Berkeley, University of California Berkeley]
+  - name: University of Oxford
+    tier: frontier
+    aliases: [Oxford, University of Oxford]
+  - name: University of Cambridge
+    tier: frontier
+    aliases: [Cambridge, University of Cambridge]
+  - name: ETH Zurich
+    tier: frontier
+    aliases: [ETH Zurich]
+  - name: Tsinghua University
+    tier: frontier
+    aliases: [Tsinghua, Tsinghua University]
+  - name: Peking University
+    tier: frontier
+    aliases: [Peking University, PKU]
+  - name: Princeton University
+    tier: frontier
+    aliases: [Princeton, Princeton University]
+  - name: University of Toronto
+    tier: frontier
+    aliases: [University of Toronto]
+  - name: University of Washington
+    tier: frontier
+    aliases: [University of Washington, UW Seattle]
+  - name: Cornell University
+    tier: leading
+    aliases: [Cornell, Cornell University]
+  - name: Columbia University
+    tier: leading
+    aliases: [Columbia, Columbia University]
+  - name: New York University
+    tier: leading
+    aliases: [NYU, New York University]
+  - name: University of Illinois Urbana-Champaign
+    tier: leading
+    aliases: [UIUC, University of Illinois Urbana-Champaign]
+  - name: Georgia Institute of Technology
+    tier: leading
+    aliases: [Georgia Tech, Georgia Institute of Technology]
+  - name: EPFL
+    tier: leading
+    aliases: [EPFL, Swiss Federal Institute of Technology Lausanne]
+  - name: Imperial College London
+    tier: leading
+    aliases: [Imperial College London]
+  - name: National University of Singapore
+    tier: leading
+    aliases: [NUS, National University of Singapore]
+  - name: University of California, Los Angeles
+    tier: leading
+    aliases: [UCLA, University of California Los Angeles]
+  - name: University of California, San Diego
+    tier: leading
+    aliases: [UC San Diego, UCSD, University of California San Diego]
+  - name: University of Michigan
+    tier: leading
+    aliases: [University of Michigan, Michigan]
+  - name: University of Texas at Austin
+    tier: leading
+    aliases: [UT Austin, University of Texas at Austin]
+  - name: University of Maryland
+    tier: strong
+    aliases: [University of Maryland, UMD]
+  - name: University of Edinburgh
+    tier: strong
+    aliases: [University of Edinburgh, Edinburgh]
+  - name: University College London
+    tier: strong
+    aliases: [UCL, University College London]
+  - name: Hong Kong University of Science and Technology
+    tier: strong
+    aliases: [HKUST, Hong Kong University of Science and Technology]
+  - name: The University of Hong Kong
+    tier: strong
+    aliases: [HKU, The University of Hong Kong, University of Hong Kong]
+  - name: Fudan University
+    tier: strong
+    aliases: [Fudan, Fudan University]
+  - name: Shanghai Jiao Tong University
+    tier: strong
+    aliases: [SJTU, Shanghai Jiao Tong University]
+  - name: Zhejiang University
+    tier: strong
+    aliases: [Zhejiang University, ZJU]
+  - name: KAIST
+    tier: strong
+    aliases: [KAIST, Korea Advanced Institute of Science and Technology]
+  - name: Seoul National University
+    tier: strong
+    aliases: [Seoul National University, SNU]
+  - name: University of Amsterdam
+    tier: tracked
+    aliases: [University of Amsterdam, UvA]
+  - name: University of Waterloo
+    tier: tracked
+    aliases: [University of Waterloo, Waterloo]
+  - name: Johns Hopkins University
+    tier: tracked
+    aliases: [Johns Hopkins University, JHU]
+  - name: University of Southern California
+    tier: tracked
+    aliases: [USC, University of Southern California]

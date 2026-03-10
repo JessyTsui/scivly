@@ -8,3 +8,6 @@ This directory is reserved for Scivly ingestion, enrichment, and delivery worker
 
 Workers own batch and document-heavy processing. They should not become a second API surface.
 
+The default arXiv triage design is documented in
+[`docs/product/paper-triage-scoring.md`](../docs/product/paper-triage-scoring.md). Public-safe seed
+priors and thresholds live in [`config/reference/`](../config/reference/README.md).

@@ -1,0 +1,121 @@
+version: 1
+owner: workers/arxiv
+scope: public-safe defaults for Scivly metadata-first paper triage
+
+default_profile:
+  source: arxiv
+  include_primary_categories:
+    - cs.AI
+    - cs.CL
+    - cs.CV
+    - cs.LG
+    - cs.RO
+    - stat.ML
+  include_secondary_categories:
+    - cs.IR
+    - cs.MA
+    - cs.HC
+    - eess.AS
+
+  hard_filters:
+    require_title: true
+    require_abstract: true
+    reject_title_keywords:
+      - withdrawn
+      - retracted
+      - erratum
+      - corrigendum
+    min_abstract_characters: 240
+    max_title_characters: 280
+
+  thresholds:
+    drop_below: 35
+    pdf_download_at: 55
+    llm_rerank_at: 65
+    digest_candidate_at: 75
+    source_fetch_at: 82
+
+  point_budget:
+    topical_relevance: 45
+    prestige_priors: 20
+    actionability: 15
+    profile_fit_and_freshness: 10
+    novelty_and_diversity: 10
+    penalties: -25
+
+  category_priors:
+    cs.CL: 1.00
+    cs.LG: 1.00
+    cs.CV: 0.95
+    cs.AI: 0.92
+    cs.RO: 0.82
+    stat.ML: 0.78
+    cs.IR: 0.70
+    cs.HC: 0.58
+    cs.MA: 0.52
+    eess.AS: 0.45
+
+  prestige_priors:
+    author_weight: 0.45
+    institution_weight: 0.30
+    lab_weight: 0.25
+    max_points_after_caps: 18
+    max_points_from_institution_only: 8
+    max_points_from_lab_only: 8
+
+  author_count_normalization:
+    method: inverse_sqrt
+    formula: clamp(0.55, 1.00, 2.2 / sqrt(author_count))
+    rationale: soften prestige boosts for very large author lists without punishing normal team sizes
+
+  uncertainty_discounts:
+    inferred_affiliation_factor: 0.85
+    inferred_lab_factor: 0.85
+    stale_author_history_factor: 0.90
+
+  actionability_signals:
+    project_page_in_comment: 1.00
+    code_release_in_comment: 0.95
+    benchmark_language: 0.85
+    dataset_release_language: 0.80
+    accepted_to_venue_comment: 0.70
+    survey_or_tutorial: 0.35
+
+  penalties:
+    weak_abstract: -6
+    keyword_profile_conflict: -8
+    likely_cross_domain_out_of_scope: -10
+    duplicate_same_day_cluster: -5
+    prestige_without_topic_fit: -7
+
+  llm_rerank:
+    enabled: true
+    model: gpt-4o-mini
+    daily_candidate_cap_per_profile: 40
+    max_score_delta: 12
+    input_fields:
+      - title
+      - abstract
+      - authors
+      - categories
+      - comment
+      - metadata_score
+      - matched_rules
+    rubric:
+      topic_fit: 0.35
+      likely_user_value: 0.25
+      novelty: 0.15
+      methodological_clarity: 0.15
+      actionable_follow_up: 0.10
+    required_output_fields:
+      - final_delta
+      - confidence
+      - paper_type
+      - reasons
+      - keep_or_drop
+
+  explanation_logging:
+    persist_component_scores: true
+    persist_rule_hits: true
+    persist_threshold_decision: true
+    persist_profile_version: true
