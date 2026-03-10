@@ -503,23 +503,144 @@
 
 ---
 
-## Task Dependency Overview
+## Task Dependency Graph
 
 ```
-Phase A (CI/CD)          — no dependencies, do first
-Phase B (Auth + DB)      — enables all real data features
-Phase C (Pipeline)       — depends on B3 (database)
-Phase D (Digest)         — depends on C3 (enrichment)
-Phase E (Chat)           — depends on C2 (parsing) + B3 (database)
-Phase F (Public)         — depends on B1 (auth) for signup
-Phase G (Developer/Ops)  — depends on B1 (auth) + B3 (database)
+A1, A2, A3               — no dependencies
+B1, B3                   — no dependencies
+B2                       — depends on B1 + B3
+C1                       — depends on B3
+C2                       — depends on C1
+C3                       — depends on C2
+C4                       — depends on C1+C2+C3
+D1                       — depends on C3
+D2                       — depends on D1
+D3                       — depends on D1
+E1                       — depends on B3
+E2                       — depends on E1 + C2
+E3                       — depends on E2
+F1                       — no dependencies
+F2                       — depends on B3 + E1
+F3                       — depends on B1 + B3
+G1                       — depends on B1 + B3
+G2                       — depends on B1 + B3
+G3                       — depends on B1 + B3
 ```
 
-Recommended parallel execution:
-- **Immediate** (no deps): A1, A2, A3
-- **Next** (infra): B1, B2, B3 in parallel
-- **Then**: C1 → C2 → C3 → C4 (sequential pipeline)
-- **Parallel with C**: D1, E1, F1
-- **After C+D**: D2, D3
-- **After C+E**: E2, E3
-- **Later**: F2, F3, G1, G2, G3
+---
+
+## Worktree Launch Plan
+
+> Each "Round" is one batch of worktree launches.
+> All tasks within the same round have **no mutual dependencies** — they can run in parallel.
+> Start the next round only after the previous round is fully merged.
+>
+> **Notation**: ✅ = done, 🔲 = pending
+
+---
+
+### Round 1 — CI/CD + Auth + Infrastructure
+
+> Prerequisites: none
+> Worktrees to launch: **6**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-a1 | ✅ A1: Frontend CI | `frontend-ci.yml` — tsc + build |
+| wt-a2 | ✅ A2: Backend CI | `backend-ci.yml` — ruff + pytest |
+| wt-a3 | 🔲 A3: PR & Issue Templates | `.github/` templates |
+| wt-b1 | 🔲 B1: Auth Integration | Clerk/Better Auth, JWT, login/signup |
+| wt-b3 | 🔲 B3: Database Connection | SQLAlchemy, migrations, Docker Compose |
+| wt-f1 | 🔲 F1: Landing Page | Public marketing pages (no auth needed) |
+
+> **Notes**: A1-A3, B1, B3, F1 all have zero mutual dependencies and can run in parallel. B2 (Frontend-Backend Wiring) is deferred to Round 2 because it requires B1 (auth tokens) and B3 (real database). Codex Review workflow already created ✅.
+
+---
+
+### Round 2 — Data Wiring & Pipeline Start
+
+> Prerequisites: Round 1 merged (B1 auth + B3 database ready)
+> Worktrees to launch: **4**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-b2 | 🔲 B2: Frontend-Backend API Wiring | Replace mocks with real API calls |
+| wt-c1 | 🔲 C1: PDF Download Worker | arXiv PDF download + rate limiting |
+| wt-e1 | 🔲 E1: Vector Indexing (pgvector) | Embeddings + semantic search API |
+| wt-g1 | 🔲 G1: API Key Management | API key CRUD + rate limiting middleware |
+
+> **Notes**: B2 needs B1+B3. C1 only needs B3. E1 only needs B3. G1 needs B1+B3. All four are independent of each other.
+
+---
+
+### Round 3 — Pipeline Middle & Platform
+
+> Prerequisites: Round 2 merged (C1 PDF download ready, E1 indexing ready)
+> Worktrees to launch: **4**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-c2 | 🔲 C2: PDF Parsing & Text Extraction | pymupdf, structured JSON output |
+| wt-f2 | 🔲 F2: Public Paper Library | Public browsing + search (needs B3+E1) |
+| wt-f3 | 🔲 F3: Billing (Stripe) | Subscriptions, usage limits (needs B1+B3) |
+| wt-g2 | 🔲 G2: Webhook Delivery System | Event dispatch + HMAC + retries |
+
+> **Notes**: C2 depends on C1 (needs downloaded PDFs). F2 needs E1 (search). F3 needs B1+B3. G2 needs B1+B3. All four are independent of each other.
+
+---
+
+### Round 4 — Enrichment & Delivery
+
+> Prerequisites: Round 3 merged (C2 parsing ready)
+> Worktrees to launch: **3**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-c3 | 🔲 C3: LLM Enrichment | Translation, summary, key points |
+| wt-e2 | 🔲 E2: Single Paper Q&A | RAG chat per paper (needs E1+C2) |
+| wt-g3 | 🔲 G3: Admin Dashboard | Operator UI, pipeline monitoring |
+
+> **Notes**: C3 depends on C2. E2 depends on E1+C2. G3 depends on B1+B3 (already done). All three are independent of each other.
+
+---
+
+### Round 5 — Digest & Cross-Paper Chat
+
+> Prerequisites: Round 4 merged (C3 enrichment ready, E2 chat ready)
+> Worktrees to launch: **3**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-d1 | 🔲 D1: Digest Assembly | Formatted digests from enriched papers |
+| wt-c4 | 🔲 C4: E2E Pipeline Orchestration | Chain all steps, status tracking, CLI |
+| wt-e3 | 🔲 E3: Cross-Paper Q&A | Multi-paper RAG with source attribution |
+
+> **Notes**: D1 depends on C3 (enriched data). C4 depends on C1+C2+C3 (all pipeline steps). E3 depends on E2. All three are independent of each other.
+
+---
+
+### Round 6 — Delivery Channels
+
+> Prerequisites: Round 5 merged (D1 digest assembly ready)
+> Worktrees to launch: **2**
+
+| Worktree | Task | Summary |
+|----------|------|---------|
+| wt-d2 | 🔲 D2: Email Delivery | Resend/SES, HTML templates, tracking |
+| wt-d3 | 🔲 D3: Telegram & Discord | Bot messages, webhook sender |
+
+> **Notes**: Both depend on D1 (assembled digests). Independent of each other.
+
+---
+
+### Quick Reference
+
+```
+Round 1: A1✅  A2✅  A3  B1  B3  F1   (6 worktrees, 无依赖)
+Round 2: B2    C1    E1  G1           (4 worktrees, 需 B1+B3)
+Round 3: C2    F2    F3  G2           (4 worktrees, 需 C1+E1)
+Round 4: C3    E2    G3              (3 worktrees, 需 C2)
+Round 5: D1    C4    E3              (3 worktrees, 需 C3+E2)
+Round 6: D2    D3                    (2 worktrees, 需 D1)
+                          Total: 22 tasks, 6 rounds
+```
