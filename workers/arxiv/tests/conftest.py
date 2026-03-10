@@ -8,9 +8,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import pytest
+import pytest  # noqa: E402
 
-from workers.arxiv.models import ArxivPaper, AuthorInfo, ScoringProfile
+from workers.arxiv.models import ArxivPaper, AuthorInfo, ScoringProfile  # noqa: E402
 
 
 def _long_abstract(text: str) -> str:

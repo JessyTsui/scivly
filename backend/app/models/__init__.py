@@ -20,12 +20,13 @@ class Vector(UserDefinedType):
         return f"vector({self.dimensions})"
 
 
-from .auth import AuthorWatchlist, NotificationChannel, TopicProfile, User, Workspace, WorkspaceMember
-from .billing import ApiKey, UsageRecord, Webhook, WebhookDelivery
-from .chat import ChatMessage, ChatSession
-from .digests import Delivery, Digest, DigestSchedule
-from .papers import Paper, PaperEnrichment, PaperScore
-from .pipeline import PipelineTask
+# Import models after Base/Vector so dependent modules can import the shared types.
+from .auth import AuthorWatchlist, NotificationChannel, TopicProfile, User, Workspace, WorkspaceMember  # noqa: E402
+from .billing import ApiKey, UsageRecord, Webhook, WebhookDelivery  # noqa: E402
+from .chat import ChatMessage, ChatSession  # noqa: E402
+from .digests import Delivery, Digest, DigestSchedule  # noqa: E402
+from .papers import Paper, PaperEnrichment, PaperScore  # noqa: E402
+from .pipeline import PipelineTask  # noqa: E402
 
 __all__ = [
     "ApiKey",

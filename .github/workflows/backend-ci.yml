@@ -1,0 +1,45 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/backend-ci.yml"
+      - "backend/**"
+      - "workers/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/backend-ci.yml"
+      - "backend/**"
+      - "workers/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            workers/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install -r workers/requirements.txt
+
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff check backend/ workers/
+
+      - name: Test backend
+        run: python -m pytest backend/app/tests workers -x -q

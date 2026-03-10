@@ -589,7 +589,7 @@ class MetadataScorer:
             f"and category prior {paper.primary_category}.",
             f"Prestige contributed {component_scores.prestige_priors}/20",
             f"from authors {', '.join(prestige_meta['matched_authors']) or 'none'}",
-            f"and affiliation priors.",
+            "and affiliation priors.",
             f"Actionability reached {component_scores.actionability}/15",
             f"via {', '.join(actionability_meta['matched_signals']) or 'no explicit delivery signals'}.",
             f"Profile fit scored {component_scores.profile_fit}/10",
