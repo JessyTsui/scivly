@@ -110,6 +110,12 @@ class AuthorWatchlist(Base):
         UniqueConstraint("workspace_id", "arxiv_author_id", name="uq_author_watchlist_workspace_arxiv_author"),
         CheckConstraint("length(trim(author_name)) > 0", name="chk_author_watchlist_author_name_nonempty"),
         Index("ix_author_watchlist_workspace_id", "workspace_id"),
+        Index(
+            "uq_author_watchlist_workspace_author_name_lower",
+            "workspace_id",
+            text("lower(author_name)"),
+            unique=True,
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))

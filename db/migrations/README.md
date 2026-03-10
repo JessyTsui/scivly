@@ -15,7 +15,7 @@ The first migration creates the core relational schema and enables `pgcrypto` fo
 
 ## Prerequisites
 
-- PostgreSQL 15 or newer is recommended
+- PostgreSQL 14 or newer is recommended
 - The database role must be allowed to create extensions, or an admin must preinstall:
   - `pgcrypto`
   - `vector`

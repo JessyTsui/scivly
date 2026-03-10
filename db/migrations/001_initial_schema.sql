@@ -17,6 +17,23 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_users_email_lower ON users (lower(email));
 
+CREATE OR REPLACE FUNCTION set_updated_at_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_users_set_updated_at ON users;
+
+CREATE TRIGGER trg_users_set_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_at_timestamp();
+
 CREATE TABLE IF NOT EXISTS workspaces (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -78,6 +95,9 @@ CREATE TABLE IF NOT EXISTS author_watchlist (
 );
 
 CREATE INDEX IF NOT EXISTS ix_author_watchlist_workspace_id ON author_watchlist (workspace_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_author_watchlist_workspace_author_name_lower
+  ON author_watchlist (workspace_id, lower(author_name));
 
 CREATE TABLE IF NOT EXISTS notification_channels (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -210,7 +230,7 @@ CREATE INDEX IF NOT EXISTS ix_digest_schedules_workspace_active
 CREATE TABLE IF NOT EXISTS digests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-  schedule_id UUID REFERENCES digest_schedules(id) ON DELETE SET NULL,
+  schedule_id UUID NOT NULL REFERENCES digest_schedules(id) ON DELETE RESTRICT,
   period_start TIMESTAMPTZ NOT NULL,
   period_end TIMESTAMPTZ NOT NULL,
   paper_ids UUID[] NOT NULL DEFAULT '{}'::UUID[],
@@ -241,7 +261,10 @@ CREATE TABLE IF NOT EXISTS deliveries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT uq_deliveries_digest_channel UNIQUE (digest_id, channel_id),
   CONSTRAINT chk_deliveries_status CHECK (status IN ('queued', 'sent', 'failed')),
-  CONSTRAINT chk_deliveries_attempts_nonnegative CHECK (attempts >= 0)
+  CONSTRAINT chk_deliveries_attempts_nonnegative CHECK (attempts >= 0),
+  CONSTRAINT chk_deliveries_sent_at_required CHECK (
+    status <> 'sent' OR sent_at IS NOT NULL
+  )
 );
 
 CREATE INDEX IF NOT EXISTS ix_deliveries_status_created_at

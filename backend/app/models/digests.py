@@ -47,9 +47,10 @@ class Digest(Base):
         ForeignKey("workspaces.id", ondelete="CASCADE"),
         nullable=False,
     )
-    schedule_id: Mapped[uuid.UUID | None] = mapped_column(
+    schedule_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("digest_schedules.id", ondelete="SET NULL"),
+        ForeignKey("digest_schedules.id", ondelete="RESTRICT"),
+        nullable=False,
     )
     period_start: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     period_end: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -65,6 +66,7 @@ class Delivery(Base):
         UniqueConstraint("digest_id", "channel_id", name="uq_deliveries_digest_channel"),
         CheckConstraint("status IN ('queued', 'sent', 'failed')", name="chk_deliveries_status"),
         CheckConstraint("attempts >= 0", name="chk_deliveries_attempts_nonnegative"),
+        CheckConstraint("status <> 'sent' OR sent_at IS NOT NULL", name="chk_deliveries_sent_at_required"),
         Index("ix_deliveries_status_created_at", text("status, created_at DESC")),
     )
 
