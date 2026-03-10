@@ -64,13 +64,13 @@ def list_workspaces(
 
 
 @router.post("", response_model=WorkspaceOut, status_code=status.HTTP_201_CREATED)
-def create_workspace(payload: WorkspaceCreate, current_user: UserOut = Depends(get_current_user)) -> WorkspaceOut:
+def create_workspace(payload: WorkspaceCreate, _: UserOut = Depends(get_current_user)) -> WorkspaceOut:
     return WorkspaceOut(
         id=UUID("44444444-4444-4444-4444-444444444444"),
         name=payload.name,
         slug=payload.slug,
         plan=payload.plan,
-        role=current_user.role,
+        role="owner",
         created_at=datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc),
     )
 

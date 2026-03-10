@@ -4,7 +4,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import __version__
 from app.config import get_settings
 from app.middleware import AuthContextMiddleware, register_exception_handlers
 from app.routers import ROUTERS
@@ -21,7 +20,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
-        version=__version__,
+        version=settings.app_version,
         description="Mock-first FastAPI skeleton for the Scivly backend service.",
         lifespan=lifespan,
         openapi_tags=[

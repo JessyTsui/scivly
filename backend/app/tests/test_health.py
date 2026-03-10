@@ -49,3 +49,31 @@ def test_not_found_uses_standard_error_shape(client: TestClient) -> None:
     assert payload["error"] == "workspace_not_found"
     assert payload["message"] == "Workspace not found."
     assert payload["request_id"]
+
+
+def test_invalid_auth_header_returns_standard_error(client: TestClient) -> None:
+    response = client.get("/auth/me", headers={"x-scivly-user-id": "not-a-uuid"})
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_auth_header"
+    assert payload["details"][0]["header"] == "x-scivly-user-id"
+    assert response.headers["x-request-id"]
+
+
+def test_workspace_creation_always_returns_owner_role(client: TestClient) -> None:
+    response = client.post(
+        "/workspaces",
+        json={"name": "Signals Lab", "slug": "signals-lab", "plan": "pro"},
+        headers={"x-scivly-user-role": "admin"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["role"] == "owner"
+
+
+def test_openapi_version_matches_health_version(client: TestClient) -> None:
+    response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    assert response.json()["info"]["version"] == "0.1.0"
