@@ -53,12 +53,13 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+        details = [dict(error) for error in exc.errors()]
         return _build_error_response(
             request,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             code="validation_error",
             message="Request validation failed.",
-            details=exc.errors(),
+            details=details,
         )
 
     @app.exception_handler(HTTPException)

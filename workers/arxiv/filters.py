@@ -4,13 +4,9 @@ from collections.abc import Iterable
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+from workers.common.config import load_default_triage_profile
 
 from .models import ArxivPaper
-
-try:
-    from workers.common.config import load_default_triage_profile
-except ModuleNotFoundError:  # pragma: no cover - pytest package resolution fallback
-    from common.config import load_default_triage_profile
 
 
 class HardFilterResult(BaseModel):

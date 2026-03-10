@@ -28,11 +28,11 @@ class DigestAssembler:
     ) -> dict[str, Any]:
         generated_time = generated_at or utc_now()
         grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        sections: list[dict[str, Any]] = []
 
         for paper in scored_papers:
             grouped[self._group_key(paper)].append(paper)
 
-        sections = []
         for group_key, papers in grouped.items():
             selected = sorted(
                 papers,

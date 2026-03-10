@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Response, status
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from app.deps import PaginationParams, get_current_user, get_pagination_params
 from app.middleware.error_handler import APIError
@@ -9,11 +10,14 @@ from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse, WebhookCreate, WebhookDeliveryPreview, WebhookOut, WebhookUpdate
 
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
+DEFAULT_WEBHOOK_URL: AnyHttpUrl = TypeAdapter(AnyHttpUrl).validate_python(
+    "https://hooks.example.com/scivly"
+)
 
 WEBHOOKS = {
     UUID("23232323-2323-2323-2323-232323232323"): WebhookOut(
         id=UUID("23232323-2323-2323-2323-232323232323"),
-        url="https://hooks.example.com/scivly",
+        url=DEFAULT_WEBHOOK_URL,
         events=["paper.matched", "digest.sent"],
         is_active=True,
         secret_preview="whsec_...b91f",
