@@ -39,7 +39,7 @@ export default function WorkspaceQAPage() {
     queryKey: ["papers", "qa"],
     queryFn: () => listPapers({ per_page: 10, sort: "score_desc" }),
   });
-  const papers = papersQuery.data?.items ?? [];
+  const papers = papersQuery.data?.items;
   const [selectedPaperId, setSelectedPaperId] = useState("");
   const [draft, setDraft] = useState("");
   const [messagesByPaper, setMessagesByPaper] = useState<Record<string, ChatMessageOut[]>>({});
@@ -47,7 +47,7 @@ export default function WorkspaceQAPage() {
   const replyTimeoutIdsRef = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!papers.length) {
+    if (!papers?.length) {
       return;
     }
 
@@ -97,7 +97,7 @@ export default function WorkspaceQAPage() {
     }));
   }, [messagesByPaper, selectedPaperId]);
 
-  const selectedPaper = papers.find((paper) => paper.id === selectedPaperId);
+  const selectedPaper = papers?.find((paper) => paper.id === selectedPaperId);
   const messages = messagesByPaper[selectedPaperId] ?? [];
   const isCurrentPaperPending = Boolean(selectedPaperId && pendingPaperIds[selectedPaperId]);
   const suggestedPrompts = [
@@ -172,7 +172,7 @@ export default function WorkspaceQAPage() {
                 <SelectValue placeholder="Choose a paper" />
               </SelectTrigger>
               <SelectContent>
-                {papers.map((paper) => (
+                {(papers ?? []).map((paper) => (
                   <SelectItem key={paper.id} value={paper.id}>
                     {paper.title}
                   </SelectItem>

@@ -5,6 +5,9 @@
   "description": "This directory is reserved for the Scivly web app.",
   "scripts": {
     "dev": "next dev --port 3100",
+    "lint": "eslint . --max-warnings=0",
+    "pretypecheck": "next typegen",
+    "typecheck": "tsc --noEmit",
     "build": "next build",
     "start": "serve dist -l 3100",
     "preview": "npm run build && serve dist -l 3100",
@@ -37,6 +40,8 @@
     "@types/node": "^25.4.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.1.6",
     "playwright": "^1.58.2",
     "serve": "^14.2.6",
     "tailwindcss": "^4.2.1",
