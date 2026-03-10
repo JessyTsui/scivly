@@ -71,9 +71,12 @@ scripts/      Bootstrap and local utility scripts
 ## Core Docs
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [docs/product/paper-triage-scoring.md](./docs/product/paper-triage-scoring.md)
 
 Additional design notes should live in `docs/` or the owning workspace `README.md` instead of
 adding more root-level Markdown files.
+
+Public-safe seed priors and tuning defaults for paper triage live in `config/reference/`.
 
 ## Open Source Direction
 

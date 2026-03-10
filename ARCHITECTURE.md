@@ -147,6 +147,10 @@ repo/
 - 记录命中原因
 - 只让高优先级论文进入全文处理
 
+The public-safe default matching design now lives in
+[`docs/product/paper-triage-scoring.md`](./docs/product/paper-triage-scoring.md), with seed
+weights and priors in [`config/reference/`](./config/reference/README.md).
+
 ### 7.3 Fulltext Processing
 
 - 下载 PDF
