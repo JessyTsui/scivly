@@ -61,21 +61,21 @@ export default function ApiReferencePage() {
             <div className="rounded-[32px] p-[1px] dark-panel">
               <div className="rounded-[31px] p-6 sm:p-8">
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-[24px] border border-white/10 bg-white/6 p-5">
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-5">
                     <KeyRound className="h-5 w-5 text-[var(--accent-bright)]" />
                     <p className="mt-4 text-sm font-semibold text-white">Auth</p>
                     <p className="mt-2 text-sm leading-6 text-slate-300">
                       Workspace-scoped bearer keys for platform and self-hosted flows.
                     </p>
                   </div>
-                  <div className="rounded-[24px] border border-white/10 bg-white/6 p-5">
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-5">
                     <ServerCog className="h-5 w-5 text-sky-300" />
                     <p className="mt-4 text-sm font-semibold text-white">Webhook-safe</p>
                     <p className="mt-2 text-sm leading-6 text-slate-300">
                       Delivery events carry deterministic ids for retries and replays.
                     </p>
                   </div>
-                  <div className="rounded-[24px] border border-white/10 bg-white/6 p-5">
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-5">
                     <Zap className="h-5 w-5 text-orange-300" />
                     <p className="mt-4 text-sm font-semibold text-white">Low ceremony</p>
                     <p className="mt-2 text-sm leading-6 text-slate-300">

@@ -1,4 +1,5 @@
 .DS_Store
+.idea/
 .env
 .env.local
 .venv/
@@ -11,6 +12,7 @@ node_modules/
 dist/
 build/
 coverage/
+frontend/screenshots/
 *.pyc
 *.pyo
 *.pyd
@@ -18,4 +20,3 @@ coverage/
 *.db
 tmp/
 temp/
-

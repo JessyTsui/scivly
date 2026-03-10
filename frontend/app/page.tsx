@@ -1,148 +1,197 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BookOpenText,
-  ChartColumn,
+  BarChart3,
+  Bell,
+  BookOpen,
+  BrainCircuit,
+  CheckCircle2,
+  ChevronRight,
+  LineChart,
   MessagesSquare,
-  Orbit,
   Radar,
+  Search,
+  Send,
   Sparkles,
+  Telescope,
+  Zap,
 } from "lucide-react";
 
 import { SectionHeading } from "@/components/section-heading";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import {
-  digestMoments,
-  productPillars,
-  surfaceCards,
-  workflowSteps,
-} from "@/lib/site-data";
+import { productPillars, workflowSteps } from "@/lib/site-data";
 
 const heroStats = [
-  { label: "Sources watched", value: "12k+" },
-  { label: "Digest latency", value: "< 6 min" },
-  { label: "Figure coverage", value: "84%" },
+  { label: "Sources monitored", value: "12k+", icon: Radar },
+  { label: "Digest latency", value: "< 6 min", icon: Zap },
+  { label: "Figure coverage", value: "84%", icon: LineChart },
 ];
 
-const signalBoard = [
+const features = [
   {
-    title: "New signal",
-    body: "A multimodal reasoning paper hit two author watchlists and one agent workflow.",
-    tone: "bg-[rgba(199,244,100,0.14)] text-[var(--accent-bright)]",
+    icon: Radar,
+    title: "Signal over volume",
+    description: "Watchlists, author graphs, and team-specific scoring keep the queue usable.",
   },
   {
-    title: "Digest ready",
-    body: "Translation, figure extraction, and limitation notes are bundled for the morning brief.",
-    tone: "bg-[rgba(56,189,248,0.12)] text-sky-300",
+    icon: BarChart3,
+    title: "Operational visibility",
+    description: "Intake, enrichment, delivery, and Q&A are measurable instead of hidden in scripts.",
   },
   {
-    title: "Follow-up question",
-    body: "An operator asked how the paper compares against last month's retrieval benchmark.",
-    tone: "bg-[rgba(251,146,60,0.12)] text-orange-300",
+    icon: MessagesSquare,
+    title: "Evidence-grounded answers",
+    description: "Follow-up questions stay attached to the paper, digest, and retrieval trail.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="float-slow absolute left-[8%] top-28 h-40 w-40 rounded-full bg-[rgba(199,244,100,0.12)] blur-3xl" />
-        <div className="pulse-glow absolute right-[10%] top-52 h-56 w-56 rounded-full bg-[rgba(15,118,110,0.08)] blur-3xl" />
-      </div>
-
+    <div className="min-h-screen">
       <SiteHeader />
 
       <main>
-        <section className="px-4 pb-18 pt-10 sm:px-6 lg:px-8 lg:pb-24 lg:pt-16">
-          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div className="rise-in">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--ink-soft)]">
-                <Sparkles className="h-4 w-4 text-[var(--accent)]" />
-                Built for paper subscriptions, digests, and follow-up research ops
-              </div>
-              <h1 className="text-balance mt-6 font-[family:var(--font-display)] text-5xl font-semibold tracking-tight text-[var(--ink)] sm:text-6xl lg:text-7xl">
-                The research intelligence layer for fast-moving paper teams.
-              </h1>
-              <p className="mt-6 max-w-2xl text-xl leading-8 text-[var(--ink-soft)]">
-                Scivly monitors topics, authors, and labs, turns papers into translated briefings,
-                and keeps every delivery, retry, and follow-up question inside one clean console.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/docs"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--ink)] px-6 py-3 text-base font-semibold text-white hover:-translate-y-0.5 hover:bg-[var(--surface-dark-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
-                >
-                  Explore docs
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-6 py-3 text-base font-semibold text-[var(--ink)] hover:border-[var(--accent)] hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
-                >
-                  View admin console
-                  <Orbit className="h-4 w-4" />
-                </Link>
-              </div>
-              <div className="mt-10 grid gap-3 sm:grid-cols-3">
-                {heroStats.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-[24px] border border-[var(--line)] bg-white/55 px-5 py-4"
+        {/* Hero Section */}
+        <section className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 lg:px-8 lg:pt-24 lg:pb-32">
+          {/* Background gradient */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary-subtle)]/50 via-transparent to-transparent" />
+            <div className="absolute top-0 right-0 h-[500px] w-[500px] bg-gradient-to-bl from-[var(--primary)]/5 to-transparent blur-3xl" />
+          </div>
+
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
+              {/* Left content */}
+              <div className="animate-in">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground-muted)] shadow-sm">
+                  <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+                  <span>Now in open beta</span>
+                </div>
+
+                {/* Headline */}
+                <h1 className="mt-6 font-[family:var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-6xl">
+                  Research intelligence for{" "}
+                  <span className="gradient-text">fast-moving teams</span>
+                </h1>
+
+                {/* Description */}
+                <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--foreground-muted)]">
+                  Scivly monitors papers, authors, and labs in real-time. Get translated briefings,
+                  figure highlights, and keep every insight in one searchable workspace.
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link href="/docs" className="btn-primary justify-center text-base">
+                    Get started
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="btn-secondary justify-center text-base"
                   >
-                    <p className="text-sm text-[var(--muted)]">{item.label}</p>
-                    <p className="mt-2 font-[family:var(--font-display)] text-3xl font-semibold">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rise-in rounded-[36px] p-[1px] [animation-delay:120ms] dark-panel">
-              <div className="grid-pattern rounded-[35px] p-6 sm:p-8">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.28em] text-white/55">
-                      Operator console
-                    </p>
-                    <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-semibold text-white">
-                      See the entire paper pipeline at a glance.
-                    </h2>
-                  </div>
-                  <div className="rounded-full bg-white/8 px-3 py-2 text-sm text-white/72">
-                    Live queue
-                  </div>
+                    View demo
+                  </Link>
                 </div>
 
-                <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                  {signalBoard.map((item) => (
-                    <div key={item.title} className="rounded-[24px] border border-white/10 bg-white/6 p-4">
-                      <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${item.tone}`}>
-                        {item.title}
-                      </div>
-                      <p className="mt-4 text-sm leading-6 text-slate-200">{item.body}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 rounded-[28px] border border-white/10 bg-[rgba(5,10,20,0.52)] p-5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-white">Morning digest run</p>
-                    <p className="text-sm text-[var(--accent-bright)]">88% auto-routed</p>
-                  </div>
-                  <div className="mt-5 space-y-4">
-                    {digestMoments.map((item, index) => (
-                      <div key={item} className="flex gap-3">
-                        <div className="mt-1 flex flex-col items-center">
-                          <div className="h-2.5 w-2.5 rounded-full bg-[var(--accent-bright)]" />
-                          {index < digestMoments.length - 1 ? (
-                            <div className="mt-2 h-10 w-px bg-white/12" />
-                          ) : null}
+                {/* Stats */}
+                <div className="mt-12 grid grid-cols-3 gap-6">
+                  {heroStats.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                      <div key={stat.label}>
+                        <div className="flex items-center gap-2 text-[var(--primary)]">
+                          <Icon className="h-4 w-4" />
                         </div>
-                        <p className="text-sm leading-6 text-slate-300">{item}</p>
+                        <p className="mt-2 font-[family:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                          {stat.value}
+                        </p>
+                        <p className="text-sm text-[var(--foreground-muted)]">{stat.label}</p>
                       </div>
-                    ))}
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right - Visual */}
+              <div className="animate-in-delay-1 relative">
+                <div className="card-dark relative overflow-hidden p-6 sm:p-8">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]">
+                        <BrainCircuit className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">Research Pipeline</p>
+                        <p className="text-xs text-slate-400">Live monitoring active</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-full bg-[var(--success)]/20 px-3 py-1">
+                      <div className="h-2 w-2 rounded-full bg-[var(--success)] animate-pulse" />
+                      <span className="text-xs font-medium text-[var(--success)]">Online</span>
+                    </div>
+                  </div>
+
+                  {/* Activity feed */}
+                  <div className="mt-8 space-y-4">
+                    {[
+                      { icon: Search, text: "Found 3 new papers matching 'multimodal reasoning'", time: "2m ago" },
+                      { icon: CheckCircle2, text: "Figure extraction completed for arXiv:2403.xxxx", time: "5m ago" },
+                      { icon: Send, text: "Morning digest sent to 42 subscribers", time: "12m ago" },
+                    ].map((item, i) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={i} className="flex items-start gap-3 rounded-xl bg-white/5 p-3">
+                          <div className="rounded-lg bg-white/10 p-2">
+                            <Icon className="h-4 w-4 text-[var(--primary-light)]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-slate-200 truncate">{item.text}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{item.time}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Progress bars */}
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-slate-400">Queue processing</span>
+                        <span className="text-[var(--primary-light)]">78%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/10">
+                        <div className="h-2 w-[78%] rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)]" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-2">
+                        <span className="text-slate-400">Translation queue</span>
+                        <span className="text-[var(--success)]">92%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/10">
+                        <div className="h-2 w-[92%] rounded-full bg-[var(--success)]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating card */}
+                <div className="absolute -bottom-6 -left-6 hidden lg:block">
+                  <div className="card p-4 shadow-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-subtle)]">
+                        <Bell className="h-5 w-5 text-[var(--accent)]" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">New match</p>
+                        <p className="text-xs text-[var(--foreground-muted)]">Vision transformers</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -150,74 +199,63 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="px-4 py-10 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[32px] border border-[var(--line)] bg-[rgba(255,255,255,0.66)] px-6 py-8 sm:px-8">
-            <div className="grid gap-5 md:grid-cols-3">
-              <div className="flex gap-4 rounded-[26px] border border-[var(--line)] bg-white/70 p-5">
-                <Radar className="mt-1 h-5 w-5 text-[var(--accent)]" />
-                <div>
-                  <p className="font-semibold text-[var(--ink)]">Signal over volume</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Watchlists, author graphs, and team-specific scoring keep the queue usable.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 rounded-[26px] border border-[var(--line)] bg-white/70 p-5">
-                <ChartColumn className="mt-1 h-5 w-5 text-[var(--accent-coral)]" />
-                <div>
-                  <p className="font-semibold text-[var(--ink)]">Operational visibility</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Intake, enrichment, delivery, and Q&amp;A are measurable instead of hidden in scripts.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 rounded-[26px] border border-[var(--line)] bg-white/70 p-5">
-                <MessagesSquare className="mt-1 h-5 w-5 text-[var(--accent-strong)]" />
-                <div>
-                  <p className="font-semibold text-[var(--ink)]">Evidence-grounded answers</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                    Follow-up questions stay attached to the paper, digest, and retrieval trail that produced them.
-                  </p>
-                </div>
-              </div>
+        {/* Features Section */}
+        <section className="border-y border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-8 md:grid-cols-3">
+              {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={feature.title} className="flex gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                      <Icon className="h-6 w-6 text-[var(--primary)]" />
+                    </div>
+                    <div>
+                      <h3 className="font-[family:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
+                        {feature.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section id="product" className="px-4 py-16 sm:px-6 lg:px-8">
+        {/* Product Pillars Section */}
+        <section id="product" className="px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="mx-auto max-w-7xl">
             <SectionHeading
-              eyebrow="Product surfaces"
-              title="One product language across the landing page, docs, and admin console."
-              body="The site is designed to feel like a real operating surface for research teams: editorial enough to pitch the product, technical enough to trust in production."
+              eyebrow="Product"
+              title="Everything you need to stay on top of research"
+              body="From monitoring sources to delivering insights, Scivly handles the full paper lifecycle in one integrated platform."
+              align="center"
             />
 
-            <div className="mt-10 grid gap-5 lg:grid-cols-2">
-              {productPillars.map((pillar, index) => {
+            <div className="mt-16 grid gap-6 md:grid-cols-2">
+              {productPillars.map((pillar) => {
                 const Icon = pillar.icon;
-
                 return (
                   <div
                     key={pillar.title}
-                    className={`glass-panel rounded-[30px] p-6 sm:p-7 ${
-                      index % 2 === 0 ? "lg:-translate-y-4" : ""
-                    }`}
+                    className="card card-hover p-6 sm:p-8"
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="rounded-2xl bg-[rgba(15,118,110,0.08)] p-3 text-[var(--accent)]">
-                        <Icon className="h-6 w-6" />
+                    <div className="flex items-start justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary-subtle)]">
+                        <Icon className="h-6 w-6 text-[var(--primary)]" />
                       </div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-                        Workflow primitive
-                      </p>
+                      <ChevronRight className="h-5 w-5 text-[var(--foreground-subtle)]" />
                     </div>
-                    <h3 className="mt-6 font-[family:var(--font-display)] text-2xl font-semibold">
+                    <h3 className="mt-6 font-[family:var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
                       {pillar.title}
                     </h3>
-                    <p className="mt-4 text-base leading-7 text-[var(--ink-soft)]">
+                    <p className="mt-3 text-[var(--foreground-muted)] leading-relaxed">
                       {pillar.description}
                     </p>
-                    <p className="mt-5 border-t border-[var(--line)] pt-5 text-sm leading-6 text-[var(--muted)]">
+                    <p className="mt-4 text-sm text-[var(--foreground-subtle)]">
                       {pillar.detail}
                     </p>
                   </div>
@@ -227,123 +265,157 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="workflow" className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[40px] p-[1px] dark-panel">
-            <div className="rounded-[39px] px-6 py-10 sm:px-8 lg:px-10">
-              <SectionHeading
-                eyebrow="Workflow"
-                title="Research operations should move from source sync to follow-up without losing context."
-                body="Scivly is structured around the full paper lifecycle, so ingestion, enrichment, routing, and delivery can be observed in one place."
-                light
-              />
+        {/* Workflow Section */}
+        <section id="workflow" className="bg-[var(--surface-dark)] px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+          <div className="mx-auto max-w-7xl">
+            <SectionHeading
+              eyebrow="How it works"
+              title="From source to insight in four steps"
+              body="Scivly structures your research workflow so nothing falls through the cracks."
+              light
+              align="center"
+            />
 
-              <div className="mt-10 grid gap-5 lg:grid-cols-4">
-                {workflowSteps.map((step) => (
-                  <div key={step.eyebrow} className="rounded-[28px] border border-white/10 bg-white/6 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--accent-bright)]">
-                      {step.eyebrow}
-                    </p>
-                    <h3 className="mt-4 font-[family:var(--font-display)] text-2xl font-semibold text-white">
+            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {workflowSteps.map((step, index) => (
+                <div key={step.eyebrow} className="relative">
+                  <div className="card-dark p-6 h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[var(--primary-light)]">
+                        {step.eyebrow}
+                      </span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 font-[family:var(--font-display)] text-lg font-semibold text-white">
                       {step.title}
                     </h3>
-                    <p className="mt-4 text-sm leading-7 text-slate-300">{step.description}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                      {step.description}
+                    </p>
                   </div>
-                ))}
+                  {index < workflowSteps.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
+                      <ChevronRight className="h-5 w-5 text-slate-600" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Docs & Admin Section */}
+        <section className="px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-8 lg:grid-cols-2">
+              {/* Documentation Card */}
+              <div className="card p-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary-subtle)]">
+                    <BookOpen className="h-6 w-6 text-[var(--primary)]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--primary)]">Documentation</p>
+                    <h3 className="font-[family:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                      Get started in minutes
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  {[
+                    "Create your first watchlist",
+                    "Connect paper sources",
+                    "Configure digest delivery",
+                    "Invite your team",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--primary-subtle)] text-xs font-semibold text-[var(--primary)]">
+                        {i + 1}
+                      </div>
+                      <span className="text-[var(--foreground-muted)]">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Link
+                  href="/docs"
+                  className="btn-primary mt-8"
+                >
+                  Read the docs
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* Admin Console Card */}
+              <div className="card-dark p-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+                    <Telescope className="h-6 w-6 text-[var(--primary-light)]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--primary-light)]">Admin Console</p>
+                    <h3 className="font-[family:var(--font-display)] text-2xl font-semibold text-white">
+                      Monitor operations
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="mt-8 grid grid-cols-2 gap-4">
+                  {[
+                    { label: "Active monitors", value: "128" },
+                    { label: "Papers today", value: "2.4k" },
+                    { label: "Delivery rate", value: "99.2%" },
+                    { label: "Avg latency", value: "4.2m" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="rounded-xl bg-white/5 p-4">
+                      <p className="text-xs text-slate-400">{stat.label}</p>
+                      <p className="mt-1 font-[family:var(--font-display)] text-xl font-semibold text-white">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <Link
+                  href="/admin"
+                  className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-[var(--surface-dark)] hover:bg-[var(--primary-light)] transition-colors"
+                >
+                  Open console
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionHeading
-              eyebrow="Beyond the hero"
-              title="Scivly needs more than a homepage, so the docs and admin console are designed from day one."
-              body="The frontend foundation includes a documentation experience for onboarding and an operator-facing admin surface for observing the system."
-            />
-
-            <div className="mt-10 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-              <div className="glass-panel rounded-[32px] p-6 sm:p-8">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent-strong)]">
-                      Documentation
-                    </p>
-                    <h3 className="mt-3 font-[family:var(--font-display)] text-3xl font-semibold">
-                      A docs surface that feels product-native.
-                    </h3>
-                  </div>
-                  <BookOpenText className="h-9 w-9 text-[var(--accent)]" />
-                </div>
-                <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  {surfaceCards.slice(0, 2).map((card) => {
-                    const Icon = card.icon;
-
-                    return (
-                      <div key={card.title} className="rounded-[24px] border border-[var(--line)] bg-white/70 p-5">
-                        <Icon className="h-5 w-5 text-[var(--accent)]" />
-                        <h4 className="mt-4 text-lg font-semibold">{card.title}</h4>
-                        <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                          {card.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
+        {/* CTA Section */}
+        <section className="px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] px-8 py-16 text-center sm:px-16">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
+              <h2 className="relative font-[family:var(--font-display)] text-3xl font-semibold text-white sm:text-4xl">
+                Ready to streamline your research?
+              </h2>
+              <p className="relative mx-auto mt-4 max-w-xl text-lg text-white/80">
+                Join researchers who use Scivly to stay ahead of the literature.
+              </p>
+              <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                 <Link
                   href="/docs"
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 hover:bg-[var(--surface-dark-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-[var(--primary)] hover:bg-white/90"
                 >
-                  Browse docs
+                  Get started
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </div>
-
-              <div className="rounded-[32px] p-[1px] dark-panel">
-                <div className="rounded-[31px] p-6 sm:p-8">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent-bright)]">
-                        Admin console
-                      </p>
-                      <h3 className="mt-3 font-[family:var(--font-display)] text-3xl font-semibold text-white">
-                        Inspect queues, delivery, and cost posture.
-                      </h3>
-                    </div>
-                    <ChartColumn className="h-9 w-9 text-[var(--accent-bright)]" />
-                  </div>
-
-                  <div className="mt-8 space-y-4">
-                    {surfaceCards.slice(2).map((card) => {
-                      const Icon = card.icon;
-
-                      return (
-                        <div
-                          key={card.title}
-                          className="flex gap-4 rounded-[24px] border border-white/10 bg-white/6 p-5"
-                        >
-                          <div className="rounded-2xl bg-white/8 p-3 text-[var(--accent-bright)]">
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-white">{card.title}</h4>
-                            <p className="mt-2 text-sm leading-6 text-slate-300">
-                              {card.description}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <Link
-                    href="/admin"
-                    className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--ink)] hover:-translate-y-0.5 hover:bg-[var(--accent-bright)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                  >
-                    Open admin preview
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+                <a
+                  href="https://github.com/JessyTsui/scivly"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-base font-semibold text-white hover:bg-white/20"
+                >
+                  View on GitHub
+                </a>
               </div>
             </div>
           </div>

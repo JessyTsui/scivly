@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "serve dist -l 3000",
+    "preview": "npm run build && serve dist -l 3000",
+    "screenshot": "node scripts/screenshot.js",
+    "screenshot:all": "node scripts/screenshot.js all"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +28,8 @@
     "@types/node": "^25.4.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "playwright": "^1.58.2",
+    "serve": "^14.2.6",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
   }
