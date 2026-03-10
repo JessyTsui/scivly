@@ -1,0 +1,6 @@
+public:
+  app_env: production
+  api_base_url: https://api.scivly.dev
+  web_base_url: https://scivly.dev
+  demo_mode: false
+

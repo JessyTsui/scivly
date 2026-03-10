@@ -9,91 +9,91 @@
   </p>
   <h3>Open-source AI research agent for personal paper tracking and daily digests.</h3>
   <p>
-    Subscribe to papers and topics, generate translated summaries and figure highlights,
-    and get a cleaner personal research workflow.
+    Subscribe to papers, authors, and topics, generate translated summaries and figure highlights,
+    and keep up with research through a cleaner personal workflow.
   </p>
 </div>
 
 ## Overview
 
 Scivly is being built as an open-source AI research agent for individuals who want a faster way to
-follow papers, understand what matters, and keep up with research without stitching together five
-different tools.
+follow papers, understand what matters, and keep up with research without stitching together a pile
+of feeds, PDFs, translation tools, and notes.
 
-The core idea is simple: users subscribe to papers, authors, or topics they care about, an agentic
-workflow organizes and summarizes new material, the most useful updates get pushed into a daily digest,
-and users can keep asking follow-up questions inside the product.
+The core loop is simple: subscribe to papers, authors, or topics you care about, let an agentic
+pipeline monitor new literature, get translated summaries and figure highlights in a daily digest,
+and ask follow-up questions when something is worth a deeper read.
 
-## Positioning
+## Current Product Focus
 
-Scivly sits closer to an AI agent or research copilot than a traditional paper database.
-
-- Not just paper storage: it is meant to help users decide what matters
-- Not just summarization: it is meant to power recurring personal research workflows
-- Not just a search tool: it is designed around subscriptions, digests, and follow-up questions
-- Not just hosted SaaS: the public repo is intended to support an open-source, self-hostable base
-
-## What Scivly Is Meant To Do
-
-- Subscribe to papers, authors, and topics that matter to an individual user
-- Run agentic research workflows on top of incoming literature
-- Generate translated summaries for faster review across languages
-- Extract figure and visual highlights for quick scanning
-- Deliver personal daily digests and alerts
-- Support follow-up questions on top of paper context and prior activity
+- Personal paper subscriptions for topics, authors, and recurring interests
+- Agentic paper monitoring and triage on top of incoming literature
+- Translated summaries and figure-first highlights for faster scanning
+- Daily digests and alerts for individual users
+- Follow-up questions on top of paper context and prior activity
 
 ## Current Status
 
-This repository is in the bootstrap phase.
+This repository is still in the bootstrap phase.
 
 What exists today:
 
-- the public project brief and repository metadata
-- a defined product direction for an open-core personal research product
-- a planned architecture spanning frontend, backend, workers, data, and integrations
+- project documentation and platform scope
+- initial repository skeleton for frontend, backend, workers, docs, database, config, scripts, and skills
+- public-safe config templates and open-source support files
 
-What is intentionally not public yet:
+Current emphasis:
 
-- production data
-- hosted service operations
-- private prompt tuning and ranking parameters
-- billing internals
-- full production pipeline implementations
-
-What that means in practice:
-
-- the vision and public framing are real
-- the repo is still early
+- the public positioning is currently individual-first rather than team-first
 - the strongest current value is the product direction and open-source foundation
 
-## Planned Architecture
+What is not in the repository yet:
 
-| Layer | Role |
-| --- | --- |
-| Frontend | AI-native personal research workspace and paper review experience |
-| Backend | API surface, orchestration, auth, and application logic |
-| Workers | Agentic ingestion, summarization, enrichment, and delivery pipelines |
-| Data | Paper metadata, user subscriptions, preferences, and digest state |
-| Integrations | Optional external delivery channels and workflow extensions |
+- production data
+- private prompt tuning and ranking parameters
+- full production pipeline implementations
+- billing internals
+- deployed service configuration
+
+## Repository Layout
+
+```text
+frontend/     Next.js application
+backend/      FastAPI service and backend modules
+workers/      Paper processing and delivery workers
+docs/         Public-safe architecture, API, product, and runbook docs
+db/           Migrations and public-safe seed data
+skills/       Installable agent skills
+config/       Public-safe config defaults and templates
+scripts/      Bootstrap and local utility scripts
+```
+
+## Core Docs
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [SCIVLY_PLAN.md](./SCIVLY_PLAN.md)
+- [FRONTEND_ARCHITECTURE.md](./FRONTEND_ARCHITECTURE.md)
+- [OPEN_SOURCE_SCOPE.md](./OPEN_SOURCE_SCOPE.md)
+- [PIPELINE_PATTERN.md](./PIPELINE_PATTERN.md)
 
 ## Open Source Direction
 
-Scivly is intended to follow an open-core model.
+Scivly is intended to follow an open-core direction.
 
 Public in this repository:
 
 - application code
 - worker and pipeline framework
+- installable skill surface
 - configuration templates
 - self-hostable project skeleton
-- developer tooling and automation surfaces
 
 Kept outside the public repository:
 
 - production user data
+- hosted service operations
+- tuned production prompts and ranking parameters
 - internal evaluation assets
-- hosted operational configuration
-- tuned production prompts and private ranking logic
 
 ## Why This Project Exists
 
@@ -117,6 +117,12 @@ faster and spend less time on repetitive review work.
 
 `ai-agent` `open-source` `research-assistant` `paper-tracking` `llm`
 `summarization` `translation` `nextjs` `fastapi` `open-core`
+
+## Community
+
+- [Contributing Guide](./CONTRIBUTING.md)
+- [Security Policy](./SECURITY.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 ## Star History
 

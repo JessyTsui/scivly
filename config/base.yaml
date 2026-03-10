@@ -1,0 +1,19 @@
+version: 1
+
+public:
+  product_name: Scivly
+  default_notify_channel: email
+  enabled_sources:
+    - arxiv
+
+pipeline:
+  arxiv_default_window_hours: 24
+  match_min_score: 3
+
+llm:
+  summary_model: gpt-4.1-mini
+  embedding_model: text-embedding-3-small
+
+digest:
+  max_items_per_digest: 10
+
