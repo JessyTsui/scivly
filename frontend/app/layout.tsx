@@ -1,15 +1,40 @@
 import type { Metadata } from "next";
 
+import { absoluteUrl, siteConfig } from "@/lib/site-config";
+
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Scivly",
-    template: "%s | Scivly",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    "Scivly is the research intelligence layer for monitoring papers, generating digests, and running follow-up questions in one place.",
+  description: siteConfig.description,
+  applicationName: siteConfig.name,
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    type: "website",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    locale: "en_US",
+    images: [
+      {
+        url: absoluteUrl("/opengraph-image"),
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [absoluteUrl("/opengraph-image")],
+  },
 };
 
 export default function RootLayout({

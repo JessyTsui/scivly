@@ -81,6 +81,64 @@
   --shadow-glow: 0 0 44px -16px rgb(129 140 248 / 0.35);
 }
 
+.public-theme {
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --background: #f0f9ff;
+  --background-elevated: #ffffff;
+  --foreground: #082f49;
+  --foreground-muted: #0f4c75;
+  --foreground-subtle: #4b6b88;
+  --primary: #0ea5e9;
+  --primary-dark: #0369a1;
+  --primary-light: #38bdf8;
+  --primary-subtle: #e0f2fe;
+  --accent: #f97316;
+  --accent-soft: #fb923c;
+  --accent-subtle: #ffedd5;
+  --surface: rgb(255 255 255 / 0.82);
+  --surface-elevated: #ecfeff;
+  --surface-hover: #f8fdff;
+  --surface-dark: #082f49;
+  --surface-dark-elevated: #0c4a6e;
+  --border: rgb(8 47 73 / 0.12);
+  --border-strong: rgb(8 47 73 / 0.18);
+  --border-subtle: rgb(8 47 73 / 0.08);
+  background:
+    radial-gradient(circle at top left, rgb(14 165 233 / 0.16), transparent 26%),
+    radial-gradient(circle at top right, rgb(249 115 22 / 0.12), transparent 22%),
+    linear-gradient(180deg, #f0f9ff 0%, #ffffff 52%, #f8fbff 100%);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+.dark .public-theme {
+  --background: #06131f;
+  --background-elevated: #0a1a29;
+  --foreground: #e0f2fe;
+  --foreground-muted: #b6d7ef;
+  --foreground-subtle: #82a6c1;
+  --primary: #38bdf8;
+  --primary-dark: #7dd3fc;
+  --primary-light: #bae6fd;
+  --primary-subtle: rgb(56 189 248 / 0.15);
+  --accent: #fb923c;
+  --accent-soft: #fdba74;
+  --accent-subtle: rgb(251 146 60 / 0.14);
+  --surface: rgb(8 24 38 / 0.82);
+  --surface-elevated: #0e2236;
+  --surface-hover: #10283e;
+  --surface-dark: #04111c;
+  --surface-dark-elevated: #0a2134;
+  --border: rgb(186 230 253 / 0.12);
+  --border-strong: rgb(186 230 253 / 0.2);
+  --border-subtle: rgb(186 230 253 / 0.08);
+  background:
+    radial-gradient(circle at top left, rgb(56 189 248 / 0.14), transparent 26%),
+    radial-gradient(circle at top right, rgb(251 146 60 / 0.12), transparent 22%),
+    linear-gradient(180deg, #07131f 0%, #0a1623 52%, #07111b 100%);
+}
+
 * {
   border-color: var(--border);
 }
@@ -99,6 +157,10 @@ body {
   font-family: var(--font-body);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   line-height: 1.5;
+}
+
+.public-theme main {
+  position: relative;
 }
 
 a,
