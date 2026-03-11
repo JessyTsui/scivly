@@ -1,5 +1,7 @@
 """Vector indexing workers for semantic retrieval."""
 
+from typing import TYPE_CHECKING, Any
+
 from .embedder import (
     DEFAULT_EMBEDDING_DIMENSIONS,
     DEFAULT_EMBEDDING_MODEL,
@@ -11,7 +13,9 @@ from .embedder import (
     create_embedding_provider,
     vector_to_pgvector,
 )
-from .steps import IndexPaperRecord, IndexPapersStep, IndexablePaper, PaperEmbeddingRecord, PostgresPaperEmbeddingStore
+
+if TYPE_CHECKING:
+    from .steps import IndexPaperRecord, IndexPapersStep, IndexablePaper, PaperEmbeddingRecord, PostgresPaperEmbeddingStore
 
 __all__ = [
     "DEFAULT_EMBEDDING_DIMENSIONS",
@@ -29,3 +33,21 @@ __all__ = [
     "create_embedding_provider",
     "vector_to_pgvector",
 ]
+
+_STEP_EXPORTS = {
+    "IndexPaperRecord",
+    "IndexPapersStep",
+    "IndexablePaper",
+    "PaperEmbeddingRecord",
+    "PostgresPaperEmbeddingStore",
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _STEP_EXPORTS:
+        from . import steps
+
+        value = getattr(steps, name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

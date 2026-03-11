@@ -96,19 +96,22 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         self.timeout_seconds = timeout_seconds
 
     async def embed_texts(self, texts: Sequence[str]) -> list[list[float]]:
-        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
-            response = await client.post(
-                f"{self.api_base}/embeddings",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "input": list(texts),
-                    "model": self.model_name,
-                },
-            )
-            response.raise_for_status()
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.api_base}/embeddings",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "input": list(texts),
+                        "model": self.model_name,
+                    },
+                )
+                response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise SemanticSearchError(f"Embedding provider request failed: {exc}") from exc
 
         payload = response.json()
         rows = sorted(payload.get("data", []), key=lambda item: item.get("index", 0))
@@ -169,11 +172,11 @@ def build_paper_embedding_text(document: Mapping[str, object]) -> str:
         category_names = [str(item).strip() for item in categories if str(item).strip()]
 
     segments = [
-        ("title", str(document.get("title", "")).strip(), 3),
-        ("title_zh", str(document.get("title_zh", "")).strip(), 2),
-        ("summary", str(document.get("one_line_summary", "")).strip(), 2),
-        ("abstract", str(document.get("abstract", "")).strip(), 1),
-        ("abstract_zh", str(document.get("abstract_zh", "")).strip(), 1),
+        ("title", _optional_text(document.get("title")), 3),
+        ("title_zh", _optional_text(document.get("title_zh")), 2),
+        ("summary", _optional_text(document.get("one_line_summary")), 2),
+        ("abstract", _optional_text(document.get("abstract")), 1),
+        ("abstract_zh", _optional_text(document.get("abstract_zh")), 1),
     ]
 
     lines: list[str] = []
@@ -199,6 +202,12 @@ def vector_to_pgvector(vector: Sequence[float]) -> str:
 
 def _tokenize(text: str) -> list[str]:
     return TOKEN_PATTERN.findall(text.lower())
+
+
+def _optional_text(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
 
 
 def _expand_term(term: str) -> list[tuple[str, float]]:
