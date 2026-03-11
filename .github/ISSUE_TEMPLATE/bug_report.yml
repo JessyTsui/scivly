@@ -1,0 +1,57 @@
+name: Bug Report
+description: Report a reproducible problem in Scivly.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide enough detail for us to reproduce and triage it.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Short description of the problem.
+      placeholder: The feed page crashes when a paper card is opened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps To Reproduce
+      description: List the exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Describe what you expected to happen.
+      placeholder: The paper detail view should open without errors.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: Describe what happened instead.
+      placeholder: The page shows a 500 error and the detail panel never loads.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, app surface, and version if relevant.
+      placeholder: macOS 15, Chrome 136, frontend dev server on port 3100
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Logs, screenshots, request IDs, or anything else that may help.
+      placeholder: Paste logs or links here.

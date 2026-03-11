@@ -1,0 +1,61 @@
+name: Feature Request
+description: Suggest a product or developer experience improvement for Scivly.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to describe the problem, proposed solution, and expected impact.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem are you trying to solve?
+      placeholder: I want a faster way to review high-scoring papers across multiple workspaces.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature, workflow, or API you want.
+      placeholder: Add a workspace switcher and aggregated digest feed with saved filters.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any workarounds or alternative solutions you have tried.
+      placeholder: I currently open each workspace separately and compare digests manually.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected Impact
+      description: Who benefits and how should success be measured?
+      placeholder: This would reduce review time for multi-tenant operators and improve digest adoption.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected Surface
+      description: Which area of Scivly would this impact most?
+      options:
+        - Frontend
+        - Backend API
+        - Workers
+        - Database
+        - Documentation
+        - Developer Experience
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Mockups, examples, links, or constraints.
+      placeholder: Add any supporting detail here.
