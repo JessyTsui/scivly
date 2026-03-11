@@ -39,6 +39,7 @@ import {
   revokeApiKey,
   updateApiKey,
 } from "@/lib/api/api-keys";
+import { useScivlySession } from "@/lib/auth/scivly-session";
 import type {
   ApiKeyCreateInput,
   ApiKeyCreatedOut,
@@ -159,10 +160,20 @@ function patchApiKeyPage(
 }
 
 export default function WorkspaceSettingsPage() {
+  const session = useScivlySession();
   const queryClient = useQueryClient();
+  const apiKeysQueryKey = ["api-keys", session.workspace?.id ?? "pending"] as const;
+  const isSessionReady =
+    session.isLoaded &&
+    session.isSignedIn &&
+    !session.isSyncing &&
+    session.backendUser !== null &&
+    session.workspace !== null;
+  const isWaitingForSession = !session.isLoaded || (session.isSignedIn && !isSessionReady);
   const apiKeysQuery = useQuery({
-    queryKey: ["api-keys"],
+    queryKey: apiKeysQueryKey,
     queryFn: listApiKeys,
+    enabled: isSessionReady,
   });
   const [name, setName] = useState("");
   const [expiry, setExpiry] = useState("90d");
@@ -189,7 +200,7 @@ export default function WorkspaceSettingsPage() {
         usage_last_24h: created.usage_last_24h,
         usage_total: created.usage_total,
       };
-      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(["api-keys"], (previous) =>
+      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(apiKeysQueryKey, (previous) =>
         patchApiKeyPage(previous, (current) => sortByCreated([storedKey, ...current]))
       );
       setCreatedKey(created);
@@ -205,7 +216,7 @@ export default function WorkspaceSettingsPage() {
   const revokeMutation = useMutation({
     mutationFn: (id: string) => revokeApiKey(id),
     onSuccess: (_, id) => {
-      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(["api-keys"], (previous) =>
+      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(apiKeysQueryKey, (previous) =>
         patchApiKeyPage(previous, (current) =>
           current.map((item) =>
             item.id === id
@@ -226,7 +237,7 @@ export default function WorkspaceSettingsPage() {
   const restoreMutation = useMutation({
     mutationFn: (id: string) => updateApiKey(id, { is_active: true }),
     onSuccess: (updated) => {
-      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(["api-keys"], (previous) =>
+      queryClient.setQueryData<PaginatedResponse<ApiKeyOut>>(apiKeysQueryKey, (previous) =>
         patchApiKeyPage(previous, (current) =>
           current.map((item) => (item.id === updated.id ? updated : item))
         )
@@ -417,7 +428,12 @@ export default function WorkspaceSettingsPage() {
                   expires_at: resolveExpiry(expiry),
                 })
               }
-              disabled={createMutation.isPending || name.trim().length < 2 || scopes.length === 0}
+              disabled={
+                !isSessionReady ||
+                createMutation.isPending ||
+                name.trim().length < 2 ||
+                scopes.length === 0
+              }
             >
               <Sparkles />
               {createMutation.isPending ? "Creating..." : "Create key"}
@@ -474,19 +490,25 @@ export default function WorkspaceSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {apiKeysQuery.isLoading ? (
+              {isWaitingForSession ? (
+                <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-hover)]/72 p-5 text-sm text-[var(--foreground-muted)]">
+                  Syncing authenticated session...
+                </div>
+              ) : null}
+
+              {!isWaitingForSession && apiKeysQuery.isLoading ? (
                 <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-hover)]/72 p-5 text-sm text-[var(--foreground-muted)]">
                   Loading API keys...
                 </div>
               ) : null}
 
-              {apiKeysQuery.isError ? (
+              {!isWaitingForSession && apiKeysQuery.isError ? (
                 <div className="rounded-[22px] border border-rose-500/20 bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-200">
                   API keys could not be loaded. Refresh the page or verify backend auth sync.
                 </div>
               ) : null}
 
-              {!apiKeysQuery.isLoading && !apiKeysQuery.isError && items.length === 0 ? (
+              {!isWaitingForSession && !apiKeysQuery.isLoading && !apiKeysQuery.isError && items.length === 0 ? (
                 <div className="rounded-[22px] border border-dashed border-[var(--border)] bg-[var(--surface-hover)]/60 p-6 text-sm leading-7 text-[var(--foreground-muted)]">
                   No keys have been issued yet.
                 </div>
