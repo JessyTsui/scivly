@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import func, insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import PaginationParams, get_current_user, get_db, get_pagination_params
@@ -110,18 +111,29 @@ async def create_session(
     session_id = uuid4()
     title = payload.title or "New Scivly chat session"
 
+    if payload.paper_id is not None:
+        paper_exists = (
+            await session.execute(select(Paper.id).where(Paper.id == payload.paper_id))
+        ).scalar_one_or_none()
+        if paper_exists is None:
+            raise APIError(status_code=404, code="paper_not_found", message="Paper not found.")
+
     await ensure_user(session, current_user)
-    await session.execute(
-        insert(ChatSession).values(
-            id=session_id,
-            workspace_id=current_user.workspace_id,
-            user_id=current_user.id,
-            paper_id=payload.paper_id,
-            session_type=payload.session_type,
-            title=title,
+    try:
+        await session.execute(
+            insert(ChatSession).values(
+                id=session_id,
+                workspace_id=current_user.workspace_id,
+                user_id=current_user.id,
+                paper_id=payload.paper_id,
+                session_type=payload.session_type,
+                title=title,
+            )
         )
-    )
-    await session.commit()
+        await session.commit()
+    except IntegrityError as exc:
+        await session.rollback()
+        raise APIError(status_code=400, code="chat_session_invalid", message="Chat session payload is invalid.") from exc
 
     row = await _get_session_row(session, session_id, current_user)
     return _serialize_session(row)

@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_current_user, get_db
+from app.middleware.error_handler import APIError
 from app.models import UsageRecord
 from app.schemas.auth import UserOut
 from app.schemas.common import UsageBucketOut, UsageStatsOut
@@ -21,6 +22,13 @@ async def get_usage(
     current_user: UserOut = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> UsageStatsOut:
+    if workspace_id is not None and workspace_id != current_user.workspace_id:
+        raise APIError(
+            status_code=403,
+            code="workspace_access_denied",
+            message="You do not have access to that workspace.",
+        )
+
     target_workspace = workspace_id or current_user.workspace_id
     rows = (
         await session.execute(
