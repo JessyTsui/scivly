@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import case, func, insert, literal_column, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.api_key_auth import generate_api_key_secret, normalize_scopes
 from app.deps import PaginationParams, get_db, get_pagination_params, get_session_user
@@ -59,7 +60,7 @@ async def _get_api_key_row(session: AsyncSession, key_id: UUID, workspace_id: UU
 
 async def _get_usage_map(session: AsyncSession, workspace_id: UUID) -> dict[str, dict[str, int]]:
     last_24h = dt.datetime.now(dt.UTC) - dt.timedelta(hours=24)
-    api_key_id_expr = literal_column("usage_records.metadata ->> 'api_key_id'")
+    api_key_id_expr: ColumnElement[str] = literal_column("usage_records.metadata ->> 'api_key_id'")
     rows = (
         await session.execute(
             select(

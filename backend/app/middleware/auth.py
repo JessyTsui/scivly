@@ -1,9 +1,17 @@
+from typing import cast
 from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from app.api_key_auth import authenticate_api_key, enforce_api_key_policy, looks_like_api_key, record_api_key_usage
+from app.api_key_auth import (
+    ApiKeyPrincipal,
+    RateLimitStatus,
+    authenticate_api_key,
+    enforce_api_key_policy,
+    looks_like_api_key,
+    record_api_key_usage,
+)
 from app.auth_paths import PUBLIC_PATHS
 from app.auth_context import build_current_user_from_token
 from app.config import get_settings
@@ -97,21 +105,21 @@ class AuthContextMiddleware(BaseHTTPMiddleware):
             request.state.current_user = None
 
         response = await call_next(request)
-        rate_limit = getattr(request.state, "rate_limit", None)
-        if rate_limit is not None:
-            response.headers["x-ratelimit-limit"] = str(rate_limit.limit_key)
-            response.headers["x-ratelimit-remaining"] = str(rate_limit.remaining_key)
-            response.headers["x-ratelimit-workspace-limit"] = str(rate_limit.limit_workspace)
-            response.headers["x-ratelimit-workspace-remaining"] = str(rate_limit.remaining_workspace)
-            response.headers["x-ratelimit-window-seconds"] = str(rate_limit.window_seconds)
+        response_rate_limit = cast(RateLimitStatus | None, getattr(request.state, "rate_limit", None))
+        if response_rate_limit is not None:
+            response.headers["x-ratelimit-limit"] = str(response_rate_limit.limit_key)
+            response.headers["x-ratelimit-remaining"] = str(response_rate_limit.remaining_key)
+            response.headers["x-ratelimit-workspace-limit"] = str(response_rate_limit.limit_workspace)
+            response.headers["x-ratelimit-workspace-remaining"] = str(response_rate_limit.remaining_workspace)
+            response.headers["x-ratelimit-window-seconds"] = str(response_rate_limit.window_seconds)
 
-        principal = getattr(request.state, "api_key", None)
-        if principal is not None:
+        response_principal = cast(ApiKeyPrincipal | None, getattr(request.state, "api_key", None))
+        if response_principal is not None:
             session_factory = get_session_factory()
             async with session_factory() as session:
                 await record_api_key_usage(
                     session,
-                    principal=principal,
+                    principal=response_principal,
                     method=request.method,
                     path=request.url.path,
                     status_code=response.status_code,
