@@ -1,9 +1,11 @@
-from collections.abc import Callable
 import asyncio
 import os
+from collections.abc import Callable
 
 import asyncpg
 from fastapi.testclient import TestClient
+
+DEMO_WORKSPACE_ID = "00000000-0000-0000-0000-000000000201"
 
 
 def _run_sql(statement: str) -> None:
@@ -24,10 +26,7 @@ def test_usage_rejects_other_workspace_ids(
     response = client.get(
         "/usage",
         params={"workspace_id": "00000000-0000-0000-0000-000000009999"},
-        headers=auth_headers(
-            local_user_id="00000000-0000-0000-0000-000000000101",
-            workspace_id="00000000-0000-0000-0000-000000000201",
-        ),
+        headers=auth_headers(workspace_id=DEMO_WORKSPACE_ID),
     )
 
     assert response.status_code == 403
@@ -41,15 +40,12 @@ def test_create_chat_session_returns_404_for_unknown_paper(
     response = client.post(
         "/chat/sessions",
         json={
-            "workspace_id": "00000000-0000-0000-0000-000000000201",
+            "workspace_id": DEMO_WORKSPACE_ID,
             "paper_id": "00000000-0000-0000-0000-000000009999",
             "session_type": "paper_qa",
             "title": "Missing paper",
         },
-        headers=auth_headers(
-            local_user_id="00000000-0000-0000-0000-000000000101",
-            workspace_id="00000000-0000-0000-0000-000000000201",
-        ),
+        headers=auth_headers(workspace_id=DEMO_WORKSPACE_ID),
     )
 
     assert response.status_code == 404
@@ -106,15 +102,12 @@ def test_digest_preview_returns_unique_paper_ids(
     response = client.post(
         "/digests/preview",
         json={
-            "workspace_id": "00000000-0000-0000-0000-000000000201",
+            "workspace_id": DEMO_WORKSPACE_ID,
             "period_start": "2026-03-01T00:00:00Z",
             "period_end": "2026-03-07T23:59:59Z",
             "limit": 5,
         },
-        headers=auth_headers(
-            local_user_id="00000000-0000-0000-0000-000000000101",
-            workspace_id="00000000-0000-0000-0000-000000000201",
-        ),
+        headers=auth_headers(workspace_id=DEMO_WORKSPACE_ID),
     )
 
     assert response.status_code == 200

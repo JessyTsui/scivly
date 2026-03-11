@@ -31,6 +31,17 @@ def get_current_user(request: Request) -> UserOut:
     return current_user
 
 
+def get_session_user(request: Request) -> UserOut:
+    current_user = get_current_user(request)
+    if getattr(request.state, "auth_type", None) == "api_key":
+        raise APIError(
+            status_code=403,
+            code="session_auth_required",
+            message="This endpoint requires a signed-in user session.",
+        )
+    return current_user
+
+
 def get_pagination_params(
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=10, ge=1, le=100),

@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const DEFAULT_API_URL = "http://localhost:8100";
+type AuthTokenResolver = () => Promise<string | null | undefined> | string | null | undefined;
+
+let authTokenResolver: AuthTokenResolver | null = null;
 
 export class ApiError extends Error {
   status: number;
@@ -21,16 +24,20 @@ export interface ApiRequestOptions<T> extends Omit<RequestInit, "body"> {
   schema?: z.ZodType<T>;
 }
 
-function resolveAuthToken(explicit?: string) {
+export function setApiAuthTokenResolver(resolver: AuthTokenResolver | null) {
+  authTokenResolver = resolver;
+}
+
+async function resolveAuthToken(explicit?: string) {
   if (explicit) {
     return explicit;
   }
 
-  if (typeof window === "undefined") {
+  if (!authTokenResolver) {
     return undefined;
   }
 
-  return window.localStorage.getItem("scivly_auth_token") ?? undefined;
+  return (await authTokenResolver()) ?? undefined;
 }
 
 function buildUrl(path: string, query?: ApiRequestOptions<unknown>["query"]) {
@@ -53,12 +60,12 @@ function buildUrl(path: string, query?: ApiRequestOptions<unknown>["query"]) {
 }
 
 export function isMockApiEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
+  return process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
 }
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions<T> = {}) {
   const { authToken, body, headers, query, schema, ...init } = options;
-  const resolvedAuthToken = resolveAuthToken(authToken);
+  const resolvedAuthToken = await resolveAuthToken(authToken);
   const isReadableStream =
     typeof ReadableStream !== "undefined" && body instanceof ReadableStream;
   const isJsonBody =

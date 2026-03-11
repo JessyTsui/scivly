@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 
-import { ApiError, apiRequest } from "@/lib/api/client";
+import { ApiError, apiRequest, setApiAuthTokenResolver } from "@/lib/api/client";
 import type { AuthUserOut, BackendWorkspaceOut, PaginatedResponse } from "@/lib/api/types";
 
 interface SessionUser {
@@ -60,6 +60,19 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
   const [workspace, setWorkspace] = useState<BackendWorkspaceOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setApiAuthTokenResolver(null);
+      return;
+    }
+
+    setApiAuthTokenResolver(async () => (await getToken()) ?? undefined);
+
+    return () => {
+      setApiAuthTokenResolver(null);
+    };
+  }, [getToken, isLoaded, isSignedIn]);
 
   const syncSession = useCallback(async () => {
     if (!isLoaded) {
