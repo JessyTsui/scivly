@@ -182,7 +182,7 @@ class S3PdfStorage:
         self.prefix = prefix.strip("/")
         if client is None:
             try:
-                import boto3  # type: ignore[import-not-found]
+                import boto3  # type: ignore[import-untyped,import-not-found]
             except ModuleNotFoundError as exc:  # pragma: no cover - depends on optional dependency state
                 raise ModuleNotFoundError(
                     "boto3 is required for S3/R2 PDF storage. Install workers/requirements.txt."
@@ -336,9 +336,8 @@ class PdfDownloader:
         self.rate_limiter = rate_limiter or ArxivRateLimiter(
             interval_seconds=float(os.getenv("SCIVLY_PDF_RATE_LIMIT_SECONDS", "3"))
         )
-        self.base_url = (
-            base_url or os.getenv("SCIVLY_ARXIV_PDF_BASE_URL", DEFAULT_ARXIV_PDF_BASE_URL)
-        ).rstrip("/")
+        _base = base_url or os.getenv("SCIVLY_ARXIV_PDF_BASE_URL") or DEFAULT_ARXIV_PDF_BASE_URL
+        self.base_url = _base.rstrip("/")
         self.timeout = timeout
         self.user_agent = user_agent
         self.max_attempts = max(1, max_attempts)

@@ -242,7 +242,7 @@ def test_download_pdf_step_executes_inside_pipeline() -> None:
 
     downloader = FakeDownloader()
     paper_id = uuid4()
-    pipeline = Pipeline([DownloadPdfStep(downloader=downloader)])
+    pipeline = Pipeline([DownloadPdfStep(downloader=downloader)])  # type: ignore[arg-type]
     task = TaskPayload(
         task_type=TaskType.FETCH,
         workspace_id=uuid4(),
