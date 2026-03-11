@@ -73,6 +73,7 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
         setError(null);
         setIsSyncing(false);
       });
+      window.localStorage.removeItem("scivly_auth_token");
       return;
     }
 
@@ -84,6 +85,7 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
       if (!token) {
         throw new Error("Clerk did not return a session token.");
       }
+      window.localStorage.setItem("scivly_auth_token", token);
 
       const [userResponse, workspaceResponse] = await Promise.all([
         apiRequest<AuthUserOut>("/auth/me", { authToken: token }),
@@ -106,6 +108,7 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
         setWorkspace(null);
         setError(message);
       });
+      window.localStorage.removeItem("scivly_auth_token");
     } finally {
       setIsSyncing(false);
     }
