@@ -548,10 +548,10 @@ G3                       — depends on B1 + B3
 |----------|------|---------|
 | wt-a1 | ✅ A1: Frontend CI | `frontend-ci.yml` — tsc + build |
 | wt-a2 | ✅ A2: Backend CI | `backend-ci.yml` — ruff + pytest |
-| wt-a3 | 🔲 A3: PR & Issue Templates | `.github/` templates |
-| wt-b1 | 🔲 B1: Auth Integration | Clerk/Better Auth, JWT, login/signup |
-| wt-b3 | 🔲 B3: Database Connection | SQLAlchemy, migrations, Docker Compose |
-| wt-f1 | 🔲 F1: Landing Page | Public marketing pages (no auth needed) |
+| wt-a3 | ✅ A3: PR & Issue Templates | `.github/` templates |
+| wt-b1 | ✅ B1: Auth Integration | Clerk/Better Auth, JWT, login/signup |
+| wt-b3 | ✅ B3: Database Connection | SQLAlchemy, migrations, Docker Compose |
+| wt-f1 | ✅ F1: Landing Page | Public marketing pages (no auth needed) |
 
 > **Notes**: A1-A3, B1, B3, F1 all have zero mutual dependencies and can run in parallel. B2 (Frontend-Backend Wiring) is deferred to Round 2 because it requires B1 (auth tokens) and B3 (real database). Codex Review workflow already created ✅.
 
@@ -564,10 +564,10 @@ G3                       — depends on B1 + B3
 
 | Worktree | Task | Summary |
 |----------|------|---------|
-| wt-b2 | 🔲 B2: Frontend-Backend API Wiring | Replace mocks with real API calls |
-| wt-c1 | 🔲 C1: PDF Download Worker | arXiv PDF download + rate limiting |
-| wt-e1 | 🔲 E1: Vector Indexing (pgvector) | Embeddings + semantic search API |
-| wt-g1 | 🔲 G1: API Key Management | API key CRUD + rate limiting middleware |
+| wt-b2 | ✅ B2: Frontend-Backend API Wiring | Replace mocks with real API calls |
+| wt-c1 | ✅ C1: PDF Download Worker | arXiv PDF download + rate limiting |
+| wt-e1 | ✅ E1: Vector Indexing (pgvector) | Embeddings + semantic search API |
+| wt-g1 | ✅ G1: API Key Management | API key CRUD + rate limiting middleware |
 
 > **Notes**: B2 needs B1+B3. C1 only needs B3. E1 only needs B3. G1 needs B1+B3. All four are independent of each other.
 
@@ -636,11 +636,11 @@ G3                       — depends on B1 + B3
 ### Quick Reference
 
 ```
-Round 1: A1✅  A2✅  A3  B1  B3  F1   (6 worktrees, 无依赖)
-Round 2: B2    C1    E1  G1           (4 worktrees, 需 B1+B3)
+Round 1: A1✅  A2✅  A3✅  B1✅  B3✅  F1✅  (6 worktrees, 全部完成)
+Round 2: B2✅  C1✅  E1✅  G1✅            (4 worktrees, 全部完成)
 Round 3: C2    F2    F3  G2           (4 worktrees, 需 C1+E1)
 Round 4: C3    E2    G3              (3 worktrees, 需 C2)
 Round 5: D1    C4    E3              (3 worktrees, 需 C3+E2)
 Round 6: D2    D3                    (2 worktrees, 需 D1)
-                          Total: 22 tasks, 6 rounds
+                          Total: 22 tasks, 6 rounds (10 done, 12 remaining)
 ```
