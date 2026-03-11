@@ -12,6 +12,7 @@ from typing import Iterable
 from .pipeline import Pipeline, PipelineStep
 from .queue import DEFAULT_REDIS_URL, TaskQueue, build_task_queue, normalize_task_type
 from .task import TaskType
+from .webhooks import PipelineWebhookEventEmitter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +20,10 @@ LOGGER = logging.getLogger(__name__)
 class LoggingStep(PipelineStep):
     """Fallback step used by the CLI until concrete workers are registered."""
 
-    def __init__(self, step_type: str | TaskType) -> None:
+    def __init__(self, step_type: str | TaskType, *, emitted_events: tuple[str, ...] = ()) -> None:
         super().__init__()
         self.step_type = step_type
+        self.emitted_events = emitted_events
 
     async def execute(self, payload: dict[str, object]) -> dict[str, object]:
         LOGGER.info("Processed %s payload keys=%s", self.normalized_step_type, sorted(payload.keys()))
@@ -94,8 +96,11 @@ class WorkerRunner:
         signal.signal(signal.SIGTERM, self.request_shutdown)
 
 
-
-def build_default_pipeline(task_types: Iterable[str | TaskType]) -> Pipeline:
+def build_default_pipeline(
+    task_types: Iterable[str | TaskType],
+    *,
+    event_emitter: PipelineWebhookEventEmitter | None = None,
+) -> Pipeline:
     steps: list[PipelineStep] = []
     seen_task_types: set[str] = set()
 
@@ -111,9 +116,23 @@ def build_default_pipeline(task_types: Iterable[str | TaskType]) -> Pipeline:
             steps.append(DownloadPdfStep())
             continue
 
+        if normalized == TaskType.DELIVER.value:
+            from workers.digest.steps import AssembleDigestStep, DeliverDigestStep
+
+            steps.extend([AssembleDigestStep(), DeliverDigestStep()])
+            continue
+
+        if normalized == TaskType.MATCH.value:
+            steps.append(LoggingStep(task_type, emitted_events=("paper.matched",)))
+            continue
+
+        if normalized == TaskType.ENRICH.value:
+            steps.append(LoggingStep(task_type, emitted_events=("paper.enriched",)))
+            continue
+
         steps.append(LoggingStep(task_type))
 
-    return Pipeline(steps)
+    return Pipeline(steps, event_emitter=event_emitter)
 
 
 
@@ -154,7 +173,13 @@ async def _run_from_args(args: argparse.Namespace) -> None:
         backend=args.queue,
         redis_url=args.redis_url,
     )
-    pipeline = build_default_pipeline(args.types)
+    webhooks_enabled = os.getenv("SCIVLY_WEBHOOK_DELIVERY_ENABLED", "true").lower() not in {
+        "0",
+        "false",
+        "no",
+    }
+    event_emitter = PipelineWebhookEventEmitter() if webhooks_enabled else None
+    pipeline = build_default_pipeline(args.types, event_emitter=event_emitter)
     runner = WorkerRunner(
         queue=queue,
         pipeline=pipeline,

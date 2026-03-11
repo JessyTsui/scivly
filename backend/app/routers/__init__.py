@@ -1,7 +1,21 @@
-from app.routers import billing, api_keys, auth, chat, digests, health, interests, papers, usage, webhooks, workspaces
+from app.routers import (
+    api_keys,
+    auth,
+    billing,
+    chat,
+    digests,
+    health,
+    interests,
+    papers,
+    public_papers,
+    usage,
+    webhooks,
+    workspaces,
+)
 
 ROUTERS = (
     health.router,
+    public_papers.router,
     auth.router,
     workspaces.router,
     interests.router,

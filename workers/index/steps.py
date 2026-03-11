@@ -263,8 +263,14 @@ def _resolve_database_url() -> str:
 
 
 def _normalize_database_url(database_url: str) -> str:
+    # Strip asyncpg driver prefix if present
+    if "+asyncpg://" in database_url:
+        database_url = database_url.replace("+asyncpg://", "://", 1)
+    # Normalize postgres:// to postgresql:// for asyncpg compatibility
     parsed = urlsplit(database_url)
-    if parsed.scheme not in {"postgres", "postgresql"}:
-        return database_url
-
-    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, parsed.query, parsed.fragment))
+    scheme = "postgresql" if parsed.scheme == "postgres" else parsed.scheme
+    # Add default username if missing (asyncpg requires it)
+    netloc = parsed.netloc
+    if "@" not in netloc and netloc:
+        netloc = f"postgres@{netloc}"
+    return urlunsplit((scheme, netloc, parsed.path, parsed.query, parsed.fragment))

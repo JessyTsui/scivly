@@ -1,10 +1,18 @@
 from datetime import datetime
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, TypeVar, cast
 from uuid import UUID
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
+from app.webhooks import SUPPORTED_WEBHOOK_EVENTS
+
 T = TypeVar("T")
+WebhookEventType = Literal["paper.matched", "paper.enriched", "digest.ready", "digest.delivered"]
+WebhookDeliveryStatus = Literal["queued", "retrying", "sent", "failed"]
+
+
+def default_webhook_events() -> list[WebhookEventType]:
+    return cast(list[WebhookEventType], list(SUPPORTED_WEBHOOK_EVENTS))
 
 
 class APIModel(BaseModel):
@@ -85,28 +93,32 @@ class UsageStatsOut(APIModel):
 
 
 class WebhookDeliveryPreview(APIModel):
-    event_type: str
-    last_status: str
+    event_type: WebhookEventType
+    last_status: WebhookDeliveryStatus
     last_attempt_at: datetime
 
 
 class WebhookCreate(APIModel):
     url: AnyHttpUrl
-    events: list[str] = Field(default_factory=lambda: ["paper.matched", "digest.sent"])
-    secret_hint: str | None = Field(default=None, max_length=16)
+    events: list[WebhookEventType] = Field(default_factory=default_webhook_events)
+    secret: str | None = Field(default=None, min_length=8, max_length=128)
 
 
 class WebhookUpdate(APIModel):
     url: AnyHttpUrl | None = None
-    events: list[str] | None = None
+    events: list[WebhookEventType] | None = None
     is_active: bool | None = None
 
 
 class WebhookOut(APIModel):
     id: UUID
     url: AnyHttpUrl
-    events: list[str]
+    events: list[WebhookEventType]
     is_active: bool = True
     secret_preview: str
     created_at: datetime
     deliveries: list[WebhookDeliveryPreview] = Field(default_factory=list)
+
+
+class WebhookCreatedOut(WebhookOut):
+    signing_secret: str

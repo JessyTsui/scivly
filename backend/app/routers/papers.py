@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -9,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_current_user, get_db
 from app.middleware.error_handler import APIError
-from app.models import Paper, PaperEnrichment, PaperScore, TopicProfile, Vector
+from app.models import Paper, PaperScore, TopicProfile, Vector
+from app.paper_views import apply_date_window, figure_descriptions, latest_enrichment_subquery, summary_fallback
 from app.persistence import format_reason_payload, format_rule_payload
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
@@ -17,45 +17,6 @@ from app.schemas.paper import MatchedRuleGroups, PaperListParams, PaperOut, Pape
 from app.semantic_search import SemanticSearchError, create_embedding_provider, vector_to_pgvector
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
-
-DATE_WINDOW_HOURS = {
-    "24h": 24,
-    "72h": 72,
-    "7d": 24 * 7,
-    "30d": 24 * 30,
-}
-
-
-def _latest_enrichment_subquery():
-    latest_created = (
-        select(
-            PaperEnrichment.paper_id.label("paper_id"),
-            func.max(PaperEnrichment.created_at).label("created_at"),
-        )
-        .group_by(PaperEnrichment.paper_id)
-        .subquery()
-    )
-
-    return (
-        select(
-            PaperEnrichment.paper_id.label("paper_id"),
-            PaperEnrichment.title_zh.label("title_zh"),
-            PaperEnrichment.abstract_zh.label("abstract_zh"),
-            PaperEnrichment.one_line_summary.label("one_line_summary"),
-            PaperEnrichment.key_points.label("key_points"),
-            PaperEnrichment.method_summary.label("method_summary"),
-            PaperEnrichment.conclusion_summary.label("conclusion_summary"),
-            PaperEnrichment.limitations.label("limitations"),
-            PaperEnrichment.figure_descriptions.label("figure_descriptions"),
-        )
-        .join(
-            latest_created,
-            (PaperEnrichment.paper_id == latest_created.c.paper_id)
-            & (PaperEnrichment.created_at == latest_created.c.created_at),
-        )
-        .subquery()
-    )
-
 
 def _latest_score_subquery(workspace_id: UUID):
     latest_created = (
@@ -104,7 +65,7 @@ def _paper_statement(
     enrichment=None,
     score=None,
 ):
-    enrichment = enrichment if enrichment is not None else _latest_enrichment_subquery()
+    enrichment = enrichment if enrichment is not None else latest_enrichment_subquery()
     score = score if score is not None else _latest_score_subquery(current_user.workspace_id)
 
     return (
@@ -154,38 +115,6 @@ def _paper_statement(
         .outerjoin(TopicProfile, TopicProfile.id == score.c.score_profile_id)
     )
 
-
-def _summary_fallback(abstract: str) -> str:
-    compact = " ".join(abstract.split())
-    if len(compact) <= 180:
-        return compact
-    return f"{compact[:177].rstrip()}..."
-
-
-def _figure_descriptions(value: object) -> list[str]:
-    if not isinstance(value, list):
-        return []
-
-    descriptions: list[str] = []
-    for item in value:
-        if isinstance(item, str):
-            stripped = item.strip()
-            if stripped:
-                descriptions.append(stripped)
-            continue
-
-        if isinstance(item, dict):
-            description = item.get("description")
-            figure = item.get("figure")
-            if isinstance(description, str) and description.strip():
-                if isinstance(figure, str) and figure.strip():
-                    descriptions.append(f"{figure.strip()}: {description.strip()}")
-                else:
-                    descriptions.append(description.strip())
-
-    return descriptions
-
-
 def _serialize_score(row) -> PaperScoreOut:
     matched_rules = [format_rule_payload(item) for item in row.matched_rules or []]
     rerank_reasons = [format_reason_payload(item) for item in row.llm_rerank_reasons or []]
@@ -212,7 +141,7 @@ def _serialize_score(row) -> PaperScoreOut:
 
 
 def _serialize_paper(row) -> PaperOut:
-    summary = row.one_line_summary or _summary_fallback(row.abstract)
+    summary = row.one_line_summary or summary_fallback(row.abstract)
     profile_labels = [row.profile_name] if row.profile_name else []
 
     return PaperOut(
@@ -236,14 +165,14 @@ def _serialize_paper(row) -> PaperOut:
         method_summary=row.method_summary,
         conclusion_summary=row.conclusion_summary,
         limitations=row.limitations,
-        figure_descriptions=_figure_descriptions(row.figure_descriptions),
+        figure_descriptions=figure_descriptions(row.figure_descriptions),
         profile_labels=profile_labels,
         score=_serialize_score(row) if row.score_id is not None else None,
     )
 
 
 async def _get_paper_row(session: AsyncSession, paper_id: UUID, current_user: UserOut):
-    enrichment = _latest_enrichment_subquery()
+    enrichment = latest_enrichment_subquery()
     score = _latest_score_subquery(current_user.workspace_id)
     row = (
         await session.execute(
@@ -254,22 +183,13 @@ async def _get_paper_row(session: AsyncSession, paper_id: UUID, current_user: Us
         raise APIError(status_code=404, code="paper_not_found", message="Paper not found.")
     return row
 
-
-def _apply_date_window(statement, date_window: str):
-    if date_window == "all":
-        return statement
-
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=DATE_WINDOW_HOURS[date_window])
-    return statement.where(Paper.published_at.is_not(None)).where(Paper.published_at >= cutoff)
-
-
 @router.get("", response_model=PaginatedResponse[PaperOut])
 async def list_papers(
     params: PaperListParams = Depends(),
     current_user: UserOut = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[PaperOut]:
-    enrichment = _latest_enrichment_subquery()
+    enrichment = latest_enrichment_subquery()
     score = _latest_score_subquery(current_user.workspace_id)
     statement = _paper_statement(current_user, enrichment=enrichment, score=score).where(
         score.c.score_id.is_not(None)
@@ -287,7 +207,7 @@ async def list_papers(
     if params.min_score is not None:
         statement = statement.where(score.c.total_score >= params.min_score)
 
-    statement = _apply_date_window(statement, params.date_window)
+    statement = apply_date_window(statement, params.date_window, Paper.published_at)
 
     total = (await session.execute(select(func.count()).select_from(statement.subquery()))).scalar_one()
 

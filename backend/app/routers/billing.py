@@ -272,7 +272,7 @@ async def _record_billing_event(
         )
         .on_conflict_do_nothing(index_elements=[BillingEvent.stripe_event_id])
     )
-    return result.rowcount > 0
+    return (result.rowcount or 0) > 0
 
 
 def _workspace_id_from_metadata(payload: Any) -> UUID | None:

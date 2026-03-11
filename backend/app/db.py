@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator, Iterable
 from pathlib import Path
 
@@ -113,23 +114,29 @@ async def run_seeds() -> list[str]:
 
 
 async def truncate_public_tables() -> None:
-    connection = await asyncpg.connect(get_asyncpg_database_url())
-    try:
-        table_rows = await connection.fetch(
-            """
-            SELECT tablename
-            FROM pg_tables
-            WHERE schemaname = 'public'
-            ORDER BY tablename ASC
-            """
-        )
-        if not table_rows:
-            return
+    for attempt in range(3):
+        connection = await asyncpg.connect(get_asyncpg_database_url())
+        try:
+            table_rows = await connection.fetch(
+                """
+                SELECT tablename
+                FROM pg_tables
+                WHERE schemaname = 'public'
+                ORDER BY tablename ASC
+                """
+            )
+            if not table_rows:
+                return
 
-        table_list = ", ".join(f'public."{row["tablename"]}"' for row in table_rows)
-        await connection.execute(f"TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE")
-    finally:
-        await connection.close()
+            table_list = ", ".join(f'public."{row["tablename"]}"' for row in table_rows)
+            await connection.execute(f"TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE")
+            return
+        except asyncpg.DeadlockDetectedError:
+            if attempt == 2:
+                raise
+            await asyncio.sleep(0.2 * (attempt + 1))
+        finally:
+            await connection.close()
 
 
 async def close_engine() -> None:

@@ -42,7 +42,7 @@ class Webhook(Base):
     __table_args__ = (
         UniqueConstraint("workspace_id", "url", name="uq_webhooks_workspace_url"),
         CheckConstraint("length(trim(url)) > 0", name="chk_webhooks_url_nonempty"),
-        CheckConstraint("length(trim(secret_hash)) > 0", name="chk_webhooks_secret_hash_nonempty"),
+        CheckConstraint("length(trim(signing_secret)) > 0", name="chk_webhooks_signing_secret_nonempty"),
         Index("ix_webhooks_workspace_active", "workspace_id", "is_active"),
         Index("ix_webhooks_events_gin", "events", postgresql_using="gin"),
     )
@@ -55,7 +55,7 @@ class Webhook(Base):
     )
     url: Mapped[str] = mapped_column(Text, nullable=False)
     events: Mapped[list[str]] = mapped_column(ARRAY(Text()), nullable=False, server_default=text("'{}'::text[]"))
-    secret_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    signing_secret: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
@@ -63,7 +63,10 @@ class Webhook(Base):
 class WebhookDelivery(Base):
     __tablename__ = "webhook_deliveries"
     __table_args__ = (
-        CheckConstraint("status IN ('queued', 'sent', 'failed')", name="chk_webhook_deliveries_status"),
+        CheckConstraint(
+            "status IN ('queued', 'retrying', 'sent', 'failed')",
+            name="chk_webhook_deliveries_status",
+        ),
         CheckConstraint("attempts >= 0", name="chk_webhook_deliveries_attempts_nonnegative"),
         CheckConstraint("length(trim(event_type)) > 0", name="chk_webhook_deliveries_event_type_nonempty"),
         Index("ix_webhook_deliveries_webhook_created_at", text("webhook_id, created_at DESC")),
@@ -79,7 +82,10 @@ class WebhookDelivery(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'queued'"))
     attempts: Mapped[int] = mapped_column(nullable=False, server_default=text("0"))
+    response_status_code: Mapped[int | None] = mapped_column()
     last_error: Mapped[str | None] = mapped_column(Text)
+    last_attempt_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    delivered_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 

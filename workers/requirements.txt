@@ -3,6 +3,7 @@ boto3>=1.37
 httpx>=0.28
 numpy>=2.0
 pydantic>=2.10
+pymupdf>=1.27
 pytest>=8.3
 python-dotenv>=1.1
 pyyaml>=6.0
