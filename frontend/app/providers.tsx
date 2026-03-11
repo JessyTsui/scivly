@@ -11,21 +11,30 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getInitialThemeState(): { hasExplicitPreference: boolean; theme: Theme } {
+  if (typeof window === "undefined") {
+    return {
+      hasExplicitPreference: false,
+      theme: "light" as Theme,
+    };
+  }
+
+  const saved = localStorage.getItem("theme");
+  if (saved === "light" || saved === "dark") {
+    return {
+      hasExplicitPreference: true,
+      theme: saved,
+    };
+  }
+
+  return {
+    hasExplicitPreference: false,
+    theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+  };
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [hasExplicitPreference, setHasExplicitPreference] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("theme") as Theme | null;
-
-    if (saved) {
-      setHasExplicitPreference(true);
-      setTheme(saved);
-      return;
-    }
-
-    setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  }, []);
+  const [{ hasExplicitPreference, theme }, setThemeState] = useState(getInitialThemeState);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -41,9 +50,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
-      if (!hasExplicitPreference) {
-        setTheme(e.matches ? "dark" : "light");
-      }
+      setThemeState((current) =>
+        current.hasExplicitPreference ? current : { ...current, theme: e.matches ? "dark" : "light" }
+      );
     };
 
     mediaQuery.addEventListener("change", handleChange);
@@ -51,8 +60,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [hasExplicitPreference]);
 
   const toggleTheme = () => {
-    setHasExplicitPreference(true);
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    setThemeState((current) => ({
+      hasExplicitPreference: true,
+      theme: current.theme === "light" ? "dark" : "light",
+    }));
   };
 
   return (

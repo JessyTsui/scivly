@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, Clock3, Send } from "lucide-react";
 
@@ -46,7 +46,42 @@ const cadencePresets: Record<"weekday" | "evening" | "friday", CadencePreset> = 
   },
 } as const;
 
-function getNextRunPreview(cadenceKey: keyof typeof cadencePresets, timezone: string) {
+type CadenceKey = keyof typeof cadencePresets;
+type ScheduleDraft = {
+  activeChannelIds: string[];
+  cadenceKey: CadenceKey;
+  scheduleActive: boolean;
+  timezone: string;
+};
+
+function resolveCadenceKey(cronExpression: string | undefined): CadenceKey {
+  return (
+    Object.entries(cadencePresets).find(([, preset]) => preset.cron_expression === cronExpression)?.[0] ??
+    "weekday"
+  ) as CadenceKey;
+}
+
+function buildScheduleDraft(
+  schedule: Awaited<ReturnType<typeof getDigestSchedule>> | undefined
+): ScheduleDraft {
+  if (!schedule) {
+    return {
+      activeChannelIds: [],
+      cadenceKey: "weekday",
+      scheduleActive: true,
+      timezone: "Asia/Shanghai",
+    };
+  }
+
+  return {
+    activeChannelIds: schedule.channel_ids,
+    cadenceKey: resolveCadenceKey(schedule.cron_expression),
+    scheduleActive: schedule.is_active,
+    timezone: schedule.timezone,
+  };
+}
+
+function getNextRunPreview(cadenceKey: CadenceKey, timezone: string) {
   const preset = cadencePresets[cadenceKey];
 
   return getNextRunAt({
@@ -62,46 +97,23 @@ export default function WorkspaceDigestsPage() {
   const scheduleQuery = useQuery({ queryKey: ["digest-schedule"], queryFn: getDigestSchedule });
   const channelsQuery = useQuery({ queryKey: ["channels"], queryFn: getNotificationChannels });
   const [selectedDigestId, setSelectedDigestId] = useState("");
-  const [cadenceKey, setCadenceKey] = useState<keyof typeof cadencePresets>("weekday");
-  const [timezone, setTimezone] = useState("Asia/Shanghai");
-  const [activeChannelIds, setActiveChannelIds] = useState<string[]>([]);
-  const [scheduleActive, setScheduleActive] = useState(true);
-
-  useEffect(() => {
-    if (!digestsQuery.data?.items.length) {
-      return;
-    }
-
-    setSelectedDigestId((current) => current || digestsQuery.data.items[0].id);
-  }, [digestsQuery.data]);
-
-  useEffect(() => {
-    if (!scheduleQuery.data) {
-      return;
-    }
-
-    const matchedPreset =
-      Object.entries(cadencePresets).find(
-        ([, preset]) => preset.cron_expression === scheduleQuery.data?.cron_expression
-      )?.[0] ?? "weekday";
-
-    setCadenceKey(matchedPreset as keyof typeof cadencePresets);
-    setTimezone(scheduleQuery.data.timezone);
-    setActiveChannelIds(scheduleQuery.data.channel_ids);
-    setScheduleActive(scheduleQuery.data.is_active);
-  }, [scheduleQuery.data]);
+  const [scheduleDraft, setScheduleDraft] = useState<ScheduleDraft | null>(null);
+  const effectiveSelectedDigestId = selectedDigestId || digestsQuery.data?.items[0]?.id || "";
+  const { activeChannelIds, cadenceKey, scheduleActive, timezone } =
+    scheduleDraft ?? buildScheduleDraft(scheduleQuery.data);
 
   const updateScheduleMutation = useMutation({
     mutationFn: updateDigestSchedule,
     onSuccess: (schedule) => {
       queryClient.setQueryData(["digest-schedule"], schedule);
+      setScheduleDraft(null);
       toast("Schedule saved", {
         description: `Next digest run is set for ${formatDateTime(schedule.next_run_at)}.`,
       });
     },
   });
 
-  const selectedDigest = digestsQuery.data?.items.find((digest) => digest.id === selectedDigestId);
+  const selectedDigest = digestsQuery.data?.items.find((digest) => digest.id === effectiveSelectedDigestId);
 
   return (
     <div className="space-y-6">
@@ -161,7 +173,7 @@ export default function WorkspaceDigestsPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {digestsQuery.data?.items.map((digest) => {
-                  const active = digest.id === selectedDigestId;
+                  const active = digest.id === effectiveSelectedDigestId;
 
                   return (
                     <button
@@ -268,7 +280,15 @@ export default function WorkspaceDigestsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--foreground)]">Cadence</label>
-                    <Select value={cadenceKey} onValueChange={(value) => setCadenceKey(value as keyof typeof cadencePresets)}>
+                    <Select
+                      value={cadenceKey}
+                      onValueChange={(value) =>
+                        setScheduleDraft((current) => ({
+                          ...(current ?? buildScheduleDraft(scheduleQuery.data)),
+                          cadenceKey: value as CadenceKey,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Cadence" />
                       </SelectTrigger>
@@ -284,7 +304,15 @@ export default function WorkspaceDigestsPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--foreground)]">Timezone</label>
-                    <Select value={timezone} onValueChange={setTimezone}>
+                    <Select
+                      value={timezone}
+                      onValueChange={(value) =>
+                        setScheduleDraft((current) => ({
+                          ...(current ?? buildScheduleDraft(scheduleQuery.data)),
+                          timezone: value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Timezone" />
                       </SelectTrigger>
@@ -308,11 +336,15 @@ export default function WorkspaceDigestsPage() {
                           key={channel.id}
                           type="button"
                           onClick={() =>
-                            setActiveChannelIds((current) =>
-                              current.includes(channel.id)
-                                ? current.filter((id) => id !== channel.id)
-                                : [...current, channel.id]
-                            )
+                            setScheduleDraft((current) => {
+                              const draft = current ?? buildScheduleDraft(scheduleQuery.data);
+                              return {
+                                ...draft,
+                                activeChannelIds: draft.activeChannelIds.includes(channel.id)
+                                  ? draft.activeChannelIds.filter((id) => id !== channel.id)
+                                  : [...draft.activeChannelIds, channel.id],
+                              };
+                            })
                           }
                           className={`min-h-11 rounded-full border px-4 text-sm font-medium transition-colors ${
                             active
@@ -348,7 +380,18 @@ export default function WorkspaceDigestsPage() {
                     <Send />
                     Save schedule
                   </Button>
-                  <Button variant="outline" onClick={() => setScheduleActive((current) => !current)}>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setScheduleDraft((current) => {
+                        const draft = current ?? buildScheduleDraft(scheduleQuery.data);
+                        return {
+                          ...draft,
+                          scheduleActive: !draft.scheduleActive,
+                        };
+                      })
+                    }
+                  >
                     {scheduleActive ? "Pause digest" : "Resume digest"}
                   </Button>
                 </div>

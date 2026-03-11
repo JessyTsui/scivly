@@ -47,59 +47,40 @@ export default function WorkspaceQAPage() {
   const replyTimeoutIdsRef = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!papers?.length) {
-      return;
-    }
-
-    setSelectedPaperId((current) => current || papers[0].id);
-    setMessagesByPaper((current) =>
-      Object.keys(current).length
-        ? current
-        : {
-            [papers[0].id]: [
-              {
-                id: "assistant-welcome",
-                role: "assistant",
-                content:
-                  "I can explain score breakdowns, summarize the paper, or suggest what to read next.",
-                created_at: hoursAgo(2),
-                model: "gpt-4o-mini (mock)",
-              },
-            ],
-          }
-    );
-  }, [papers]);
-
-  useEffect(() => {
     return () => {
       replyTimeoutIdsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
       replyTimeoutIdsRef.current = [];
     };
   }, []);
 
-  useEffect(() => {
-    if (!selectedPaperId || messagesByPaper[selectedPaperId]) {
-      return;
-    }
-
-    setMessagesByPaper((current) => ({
-      ...current,
-      [selectedPaperId]: [
+  const defaultSelectedPaperId = papers[0]?.id ?? "";
+  const effectiveSelectedPaperId = selectedPaperId || defaultSelectedPaperId;
+  const selectedPaper = papers.find((paper) => paper.id === effectiveSelectedPaperId);
+  const seedMessages = effectiveSelectedPaperId
+    ? (messagesByPaper[effectiveSelectedPaperId] ??
+      [
         {
-          id: `assistant-seed-${selectedPaperId}`,
-          role: "assistant",
+          id:
+            effectiveSelectedPaperId === defaultSelectedPaperId
+              ? "assistant-welcome"
+              : `assistant-seed-${effectiveSelectedPaperId}`,
+          role: "assistant" as const,
           content:
-            "Ask about score reasons, limitations, or what deserves follow-up reading. I will stay grounded to the mock paper context.",
-          created_at: new Date().toISOString(),
+            effectiveSelectedPaperId === defaultSelectedPaperId
+              ? "I can explain score breakdowns, summarize the paper, or suggest what to read next."
+              : "Ask about score reasons, limitations, or what deserves follow-up reading. I will stay grounded to the mock paper context.",
+          created_at:
+            effectiveSelectedPaperId === defaultSelectedPaperId
+              ? hoursAgo(2)
+              : new Date().toISOString(),
           model: "gpt-4o-mini (mock)",
         },
-      ],
-    }));
-  }, [messagesByPaper, selectedPaperId]);
-
-  const selectedPaper = papers?.find((paper) => paper.id === selectedPaperId);
-  const messages = messagesByPaper[selectedPaperId] ?? [];
-  const isCurrentPaperPending = Boolean(selectedPaperId && pendingPaperIds[selectedPaperId]);
+      ])
+    : [];
+  const messages = seedMessages;
+  const isCurrentPaperPending = Boolean(
+    effectiveSelectedPaperId && pendingPaperIds[effectiveSelectedPaperId]
+  );
   const suggestedPrompts = [
     "Why did this paper score so high?",
     "What is the main limitation?",
@@ -117,7 +98,7 @@ export default function WorkspaceQAPage() {
     setMessagesByPaper((current) => ({
       ...current,
       [selectedPaper.id]: [
-        ...(current[selectedPaper.id] ?? []),
+        ...(current[selectedPaper.id] ?? messages),
         {
           id: `user-${crypto.randomUUID()}`,
           role: "user",
@@ -136,7 +117,7 @@ export default function WorkspaceQAPage() {
       setMessagesByPaper((current) => ({
         ...current,
         [selectedPaper.id]: [
-          ...(current[selectedPaper.id] ?? []),
+          ...(current[selectedPaper.id] ?? messages),
           {
             id: `assistant-${crypto.randomUUID()}`,
             role: "assistant",
@@ -167,7 +148,7 @@ export default function WorkspaceQAPage() {
                 Ask follow-up questions against mock paper context, score reasons, and digest-ready summaries.
               </p>
             </div>
-            <Select value={selectedPaperId} onValueChange={setSelectedPaperId}>
+            <Select value={effectiveSelectedPaperId} onValueChange={setSelectedPaperId}>
               <SelectTrigger className="max-w-[360px]">
                 <SelectValue placeholder="Choose a paper" />
               </SelectTrigger>

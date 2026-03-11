@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, Plus, Trash2, UserPlus } from "lucide-react";
 
@@ -38,33 +38,6 @@ export default function WorkspaceInterestsPage() {
   const [authorName, setAuthorName] = useState("");
   const [authorNotes, setAuthorNotes] = useState("");
   const [channelDrafts, setChannelDrafts] = useState<Record<string, string>>({});
-  const [dirtyChannelIds, setDirtyChannelIds] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (!channelsQuery.data) {
-      return;
-    }
-
-    setChannelDrafts((current) => {
-      const next = { ...current };
-      let changed = false;
-
-      channelsQuery.data.forEach((channel) => {
-        if (dirtyChannelIds[channel.id]) {
-          return;
-        }
-
-        const target = channel.config.target ?? "";
-
-        if (next[channel.id] !== target) {
-          next[channel.id] = target;
-          changed = true;
-        }
-      });
-
-      return changed ? next : current;
-    });
-  }, [channelsQuery.data, dirtyChannelIds]);
 
   const createProfileMutation = useMutation({
     mutationFn: createProfile,
@@ -112,14 +85,11 @@ export default function WorkspaceInterestsPage() {
   const updateChannelMutation = useMutation({
     mutationFn: updateNotificationChannel,
     onSuccess: (channel) => {
-      setChannelDrafts((previous) => ({
-        ...previous,
-        [channel.id]: channel.config.target ?? "",
-      }));
-      setDirtyChannelIds((previous) => ({
-        ...previous,
-        [channel.id]: false,
-      }));
+      setChannelDrafts((previous) => {
+        const next = { ...previous };
+        delete next[channel.id];
+        return next;
+      });
       queryClient.setQueryData(
         ["channels"],
         (previous: Awaited<ReturnType<typeof getNotificationChannels>> | undefined) =>
@@ -353,15 +323,11 @@ export default function WorkspaceInterestsPage() {
 
                   <div className="mt-4 grid gap-3">
                     <Input
-                      value={channelDrafts[channel.id] ?? ""}
+                      value={channelDrafts[channel.id] ?? channel.config.target ?? ""}
                       onChange={(event) => {
                         setChannelDrafts((previous) => ({
                           ...previous,
                           [channel.id]: event.target.value,
-                        }));
-                        setDirtyChannelIds((previous) => ({
-                          ...previous,
-                          [channel.id]: true,
                         }));
                       }}
                     />
@@ -373,7 +339,7 @@ export default function WorkspaceInterestsPage() {
                             id: channel.id,
                             config: {
                               ...channel.config,
-                              target: channelDrafts[channel.id] ?? "",
+                              target: channelDrafts[channel.id] ?? channel.config.target ?? "",
                             },
                           })
                         }
