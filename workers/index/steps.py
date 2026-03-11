@@ -255,7 +255,7 @@ def _parse_paper_ids(payload: dict[str, Any]) -> list[UUID] | None:
 def _parse_positive_int(value: object) -> int | None:
     if value is None:
         return None
-    parsed = int(value)
+    parsed = int(str(value))
     return parsed if parsed > 0 else None
 
 

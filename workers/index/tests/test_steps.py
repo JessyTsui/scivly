@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from uuid import uuid4
 
 from workers.index.embedder import HashEmbeddingProvider
@@ -34,7 +35,7 @@ class InMemoryEmbeddingStore:
             filtered = filtered[:limit]
         return filtered
 
-    async def persist_embeddings(self, records: list[PaperEmbeddingRecord]) -> int:
+    async def persist_embeddings(self, records: Sequence[PaperEmbeddingRecord]) -> int:
         self.persisted.extend(records)
         return len(records)
 
