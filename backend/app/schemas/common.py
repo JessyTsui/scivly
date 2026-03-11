@@ -59,6 +59,12 @@ class ApiKeyOut(APIModel):
     expires_at: datetime | None = None
     is_active: bool = True
     created_at: datetime
+    usage_last_24h: int = 0
+    usage_total: int = 0
+
+
+class ApiKeyCreatedOut(ApiKeyOut):
+    token: str
 
 
 class UsageBucketOut(APIModel):

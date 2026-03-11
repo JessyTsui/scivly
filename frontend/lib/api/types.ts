@@ -59,6 +59,35 @@ export interface BackendWorkspaceOut {
   created_at: ApiDateString;
 }
 
+export interface ApiKeyOut {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  last_used_at?: ApiDateString | null;
+  expires_at?: ApiDateString | null;
+  is_active: boolean;
+  created_at: ApiDateString;
+  usage_last_24h: number;
+  usage_total: number;
+}
+
+export interface ApiKeyCreatedOut extends ApiKeyOut {
+  token: string;
+}
+
+export interface ApiKeyCreateInput {
+  name: string;
+  scopes: string[];
+  expires_at?: ApiDateString | null;
+}
+
+export interface ApiKeyUpdateInput {
+  name?: string;
+  scopes?: string[];
+  is_active?: boolean;
+}
+
 export interface WorkspaceSummary {
   id: string;
   name: string;

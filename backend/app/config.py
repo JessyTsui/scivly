@@ -83,6 +83,9 @@ class Settings(BaseSettings):
         default=20.0,
         validation_alias=AliasChoices("SCIVLY_EMBEDDING_TIMEOUT_SECONDS", "EMBEDDING_TIMEOUT_SECONDS"),
     )
+    api_key_rate_limit_window_seconds: int = 60
+    api_key_rate_limit_per_key: int = 60
+    api_key_rate_limit_per_workspace: int = 300
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

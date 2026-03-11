@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { ScoreBadge } from "@/components/workspace/ScoreBadge";
+import { useScivlySession } from "@/lib/auth/scivly-session";
 import { getNextRunAt } from "@/lib/mock/time";
 import { formatCalendarDate, formatDateTime } from "@/lib/utils";
 
@@ -92,12 +93,33 @@ function getNextRunPreview(cadenceKey: CadenceKey, timezone: string) {
 }
 
 export default function WorkspaceDigestsPage() {
+  const session = useScivlySession();
   const queryClient = useQueryClient();
-  const digestsQuery = useQuery({ queryKey: ["digests"], queryFn: listDigests });
-  const scheduleQuery = useQuery({ queryKey: ["digest-schedule"], queryFn: getDigestSchedule });
-  const channelsQuery = useQuery({ queryKey: ["channels"], queryFn: getNotificationChannels });
+  const queriesEnabled =
+    session.isLoaded &&
+    session.isSignedIn &&
+    !session.isSyncing &&
+    !session.error &&
+    Boolean(session.workspace);
+  const digestsQuery = useQuery({
+    queryKey: ["digests"],
+    queryFn: listDigests,
+    enabled: queriesEnabled,
+  });
+  const scheduleQuery = useQuery({
+    queryKey: ["digest-schedule"],
+    queryFn: getDigestSchedule,
+    enabled: queriesEnabled,
+  });
+  const channelsQuery = useQuery({
+    queryKey: ["channels"],
+    queryFn: getNotificationChannels,
+    enabled: queriesEnabled,
+  });
   const [selectedDigestId, setSelectedDigestId] = useState("");
   const [scheduleDraft, setScheduleDraft] = useState<ScheduleDraft | null>(null);
+  const combinedError =
+    digestsQuery.error ?? scheduleQuery.error ?? channelsQuery.error ?? null;
   const effectiveSelectedDigestId = selectedDigestId || digestsQuery.data?.items[0]?.id || "";
   const { activeChannelIds, cadenceKey, scheduleActive, timezone } =
     scheduleDraft ?? buildScheduleDraft(scheduleQuery.data);
@@ -117,6 +139,24 @@ export default function WorkspaceDigestsPage() {
 
   return (
     <div className="space-y-6">
+      {!queriesEnabled ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-[var(--foreground-muted)]">
+            Syncing authenticated workspace context with the backend...
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {combinedError ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-rose-500">
+            {combinedError instanceof Error
+              ? combinedError.message
+              : "Failed to load digests from the backend API."}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
@@ -272,8 +312,8 @@ export default function WorkspaceDigestsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-2xl">Digest schedule</CardTitle>
-                <p className="text-sm leading-7 text-[var(--foreground-muted)]">
-                  Keep the schedule visible and editable before the backend wiring arrives.
+              <p className="text-sm leading-7 text-[var(--foreground-muted)]">
+                  Keep the schedule visible and editable while using the real backend delivery settings.
                 </p>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -375,13 +415,14 @@ export default function WorkspaceDigestsPage() {
                         next_run_at: getNextRunPreview(cadenceKey, timezone),
                       })
                     }
-                    disabled={updateScheduleMutation.isPending}
+                    disabled={!queriesEnabled || updateScheduleMutation.isPending}
                   >
                     <Send />
                     Save schedule
                   </Button>
                   <Button
                     variant="outline"
+                    disabled={!queriesEnabled}
                     onClick={() =>
                       setScheduleDraft((current) => {
                         const draft = current ?? buildScheduleDraft(scheduleQuery.data);

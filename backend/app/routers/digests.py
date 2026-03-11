@@ -13,6 +13,8 @@ from app.persistence import build_digest_summary_markdown, build_digest_title, r
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
 from app.schemas.digest import (
+    DigestContentOut,
+    DigestContentSectionOut,
     DigestOut,
     DigestPreviewRequest,
     DigestScheduleCreate,
@@ -38,11 +40,48 @@ async def _channel_types_for_ids(session: AsyncSession, workspace_id: UUID, chan
     return [row.channel_type for row in rows]
 
 
+def _serialize_digest_content(raw_content: object) -> DigestContentOut:
+    if not isinstance(raw_content, dict):
+        return DigestContentOut()
+
+    sections: list[DigestContentSectionOut] = []
+    for section in raw_content.get("sections", []):
+        if not isinstance(section, dict):
+            continue
+
+        paper_ids: list[UUID] = []
+        for paper_id in section.get("paper_ids", []):
+            try:
+                paper_ids.append(UUID(str(paper_id)))
+            except (TypeError, ValueError):
+                continue
+
+        title = section.get("title")
+        if not isinstance(title, str) or not title.strip():
+            title = "Untitled section"
+
+        summary = section.get("summary")
+        sections.append(
+            DigestContentSectionOut(
+                title=title.strip(),
+                paper_ids=paper_ids,
+                summary=summary if isinstance(summary, str) else None,
+            )
+        )
+
+    headline = raw_content.get("headline")
+    return DigestContentOut(
+        headline=headline.strip() if isinstance(headline, str) and headline.strip() else None,
+        sections=sections,
+    )
+
+
 def _serialize_digest(row, channel_types: list[str]) -> DigestOut:
     content = row.content or {}
     return DigestOut(
         id=row.id,
         workspace_id=row.workspace_id,
+        schedule_id=row.schedule_id,
         title=build_digest_title(content),
         period_start=row.period_start,
         period_end=row.period_end,
@@ -50,6 +89,7 @@ def _serialize_digest(row, channel_types: list[str]) -> DigestOut:
         status=row.status,
         channel_types=channel_types,
         summary_markdown=build_digest_summary_markdown(content),
+        content=_serialize_digest_content(content),
         created_at=row.created_at,
     )
 
@@ -312,6 +352,7 @@ async def preview_digest(
     return DigestOut(
         id=uuid4(),
         workspace_id=current_user.workspace_id,
+        schedule_id=uuid4(),
         title="Preview Digest",
         period_start=payload.period_start,
         period_end=payload.period_end,
@@ -319,6 +360,7 @@ async def preview_digest(
         status="draft",
         channel_types=channel_types,
         summary_markdown=summary_markdown,
+        content=DigestContentOut(),
         created_at=payload.period_end,
     )
 

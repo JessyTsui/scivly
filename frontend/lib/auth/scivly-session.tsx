@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 
-import { ApiError, apiRequest } from "@/lib/api/client";
+import { ApiError, apiRequest, setApiAuthTokenResolver } from "@/lib/api/client";
 import type { AuthUserOut, BackendWorkspaceOut, PaginatedResponse } from "@/lib/api/types";
 
 interface SessionUser {
@@ -61,12 +61,28 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
   const [error, setError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setApiAuthTokenResolver(null);
+      return;
+    }
+
+    setApiAuthTokenResolver(async () => (await getToken()) ?? undefined);
+
+    return () => {
+      setApiAuthTokenResolver(null);
+    };
+  }, [getToken, isLoaded, isSignedIn]);
+
   const syncSession = useCallback(async () => {
     if (!isLoaded) {
       return;
     }
 
     if (!isSignedIn) {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("scivly_auth_token");
+      }
       startTransition(() => {
         setBackendUser(null);
         setWorkspace(null);
@@ -83,6 +99,10 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
 
       if (!token) {
         throw new Error("Clerk did not return a session token.");
+      }
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("scivly_auth_token", token);
       }
 
       const [userResponse, workspaceResponse] = await Promise.all([
@@ -106,6 +126,9 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
         setWorkspace(null);
         setError(message);
       });
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("scivly_auth_token");
+      }
     } finally {
       setIsSyncing(false);
     }
