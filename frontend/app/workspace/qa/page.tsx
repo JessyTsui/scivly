@@ -53,9 +53,9 @@ export default function WorkspaceQAPage() {
     };
   }, []);
 
-  const defaultSelectedPaperId = papers[0]?.id ?? "";
+  const defaultSelectedPaperId = papers?.[0]?.id ?? "";
   const effectiveSelectedPaperId = selectedPaperId || defaultSelectedPaperId;
-  const selectedPaper = papers.find((paper) => paper.id === effectiveSelectedPaperId);
+  const selectedPaper = papers?.find((paper) => paper.id === effectiveSelectedPaperId);
   const seedMessages = effectiveSelectedPaperId
     ? (messagesByPaper[effectiveSelectedPaperId] ??
       [

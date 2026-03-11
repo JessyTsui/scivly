@@ -1,22 +1,15 @@
 "use client";
 
 import {
-  ArrowRight,
-  CheckCircle2,
   Clock,
   FileQuestion,
-  MessageSquare,
-  MoreHorizontal,
   Paperclip,
   Plus,
   RefreshCw,
   Search,
-  Send,
   ThumbsDown,
   ThumbsUp,
-  User,
 } from "lucide-react";
-import Link from "next/link";
 
 const questions = [
   {

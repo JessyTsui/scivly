@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Code2, FileCode, Search, ShieldCheck, Telescope } from "lucide-react";
+import { ArrowRight, BookOpen, Code2, FileCode, Search, ShieldCheck } from "lucide-react";
 
 import { SectionHeading } from "@/components/section-heading";
 import { SiteFooter } from "@/components/site-footer";

@@ -1,12 +1,8 @@
 "use client";
 
 import {
-  AlertCircle,
   ArrowRight,
   CheckCircle2,
-  Clock,
-  Download,
-  FileText,
   MoreHorizontal,
   RefreshCw,
   Settings,

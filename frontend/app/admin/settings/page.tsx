@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronRight, Globe, Key, Moon, Palette, Shield, User } from "lucide-react";
+import { Bell, ChevronRight, Globe, Key, Palette, Shield, User } from "lucide-react";
 import Link from "next/link";
 
 const settingsSections = [

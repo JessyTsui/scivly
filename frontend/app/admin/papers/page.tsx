@@ -2,16 +2,12 @@
 
 import {
   ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  Clock,
   Download,
   ExternalLink,
   Filter,
   MoreHorizontal,
   Search,
   Star,
-  Tag,
 } from "lucide-react";
 
 const papers = [

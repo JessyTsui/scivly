@@ -4,7 +4,6 @@ import {
   BrainCircuit,
   ChevronRight,
   Globe2,
-  Layers2,
   Send,
 } from "lucide-react";
 

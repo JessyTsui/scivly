@@ -3,9 +3,9 @@
 import {
   createContext,
   startTransition,
+  useCallback,
   useContext,
   useEffect,
-  useEffectEvent,
   useState,
 } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
@@ -61,7 +61,7 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
   const [error, setError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const syncSession = useEffectEvent(async () => {
+  const syncSession = useCallback(async () => {
     if (!isLoaded) {
       return;
     }
@@ -109,11 +109,11 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
     } finally {
       setIsSyncing(false);
     }
-  });
+  }, [isLoaded, isSignedIn, getToken]);
 
   useEffect(() => {
     void syncSession();
-  }, [isLoaded, isSignedIn, syncSession]);
+  }, [syncSession]);
 
   const value: ScivlySessionContextValue = {
     backendUser,

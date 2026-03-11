@@ -23,6 +23,15 @@ from app.main import create_app  # noqa: E402
 TEST_AUTH_SECRET = "scivly-test-secret-1234567890-abcdef"
 
 
+def _database_is_reachable() -> bool:
+    try:
+        import asyncpg
+        asyncio.run(asyncpg.connect(os.environ.get("DATABASE_URL", "postgresql://localhost:5432/scivly")))
+        return True
+    except Exception:
+        return False
+
+
 def _bootstrap_database() -> None:
     asyncio.run(run_migrations())
     asyncio.run(truncate_public_tables())
@@ -44,8 +53,16 @@ def auth_config(monkeypatch: pytest.MonkeyPatch) -> None:
         get_settings.cache_clear()
 
 
+_db_reachable: bool | None = None
+
+
 @pytest.fixture()
 def client() -> Generator[TestClient, None, None]:
+    global _db_reachable
+    if _db_reachable is None:
+        _db_reachable = _database_is_reachable()
+    if not _db_reachable:
+        pytest.skip("PostgreSQL is not reachable")
     _bootstrap_database()
     app = create_app()
     with TestClient(app) as test_client:

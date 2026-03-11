@@ -2,16 +2,12 @@
 
 import {
   ArrowRight,
-  Calendar,
   CheckCircle2,
   Clock,
-  Download,
-  Mail,
   MoreHorizontal,
   Newspaper,
   Play,
   Plus,
-  RefreshCw,
   Settings,
   Users,
 } from "lucide-react";
