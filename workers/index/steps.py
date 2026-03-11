@@ -4,6 +4,7 @@ import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
+from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
 import asyncpg
@@ -262,8 +263,14 @@ def _resolve_database_url() -> str:
 
 
 def _normalize_database_url(database_url: str) -> str:
-    if database_url.startswith("postgresql+asyncpg://"):
-        return database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
-    if database_url.startswith("postgres+asyncpg://"):
-        return database_url.replace("postgres+asyncpg://", "postgres://", 1)
-    return database_url
+    # Strip asyncpg driver prefix if present
+    if "+asyncpg://" in database_url:
+        database_url = database_url.replace("+asyncpg://", "://", 1)
+    # Normalize postgres:// to postgresql:// for asyncpg compatibility
+    parsed = urlsplit(database_url)
+    scheme = "postgresql" if parsed.scheme == "postgres" else parsed.scheme
+    # Add default username if missing (asyncpg requires it)
+    netloc = parsed.netloc
+    if "@" not in netloc and netloc:
+        netloc = f"postgres@{netloc}"
+    return urlunsplit((scheme, netloc, parsed.path, parsed.query, parsed.fragment))

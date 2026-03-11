@@ -30,6 +30,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         openapi_tags=[
             {"name": "Health", "description": "Liveness and readiness checks."},
+            {"name": "Public Papers", "description": "Public library browsing and search endpoints."},
             {"name": "Auth", "description": "Authentication and session context."},
             {"name": "Workspaces", "description": "Workspace CRUD endpoints."},
             {"name": "Interests", "description": "Topic profiles and author watchlists."},

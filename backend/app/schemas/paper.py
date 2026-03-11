@@ -14,6 +14,11 @@ class PaperAuthor(APIModel):
     affiliation: str | None = None
 
 
+class PaperFigureOut(APIModel):
+    label: str
+    description: str
+
+
 class PaperOut(APIModel):
     id: UUID
     arxiv_id: str
@@ -87,3 +92,41 @@ class PaperListParams(APIModel):
     min_score: float | None = Field(default=None, ge=0)
     date_window: Literal["24h", "72h", "7d", "30d", "all"] = "all"
     sort: Literal["score_desc", "score_asc", "newest", "oldest"] = "score_desc"
+
+
+class PublicPaperOut(APIModel):
+    id: UUID
+    arxiv_id: str
+    version: int
+    title: str
+    abstract: str
+    authors: list[PaperAuthor]
+    categories: list[str]
+    primary_category: str
+    published_at: datetime
+    updated_at: datetime
+    comment: str | None = None
+    journal_ref: str | None = None
+    doi: str | None = None
+    title_zh: str | None = None
+    abstract_zh: str | None = None
+    one_line_summary: str
+    key_points: list[str] = Field(default_factory=list)
+    method_summary: str | None = None
+    conclusion_summary: str | None = None
+    limitations: str | None = None
+    figures: list[PaperFigureOut] = Field(default_factory=list)
+
+
+class PublicPaperListParams(APIModel):
+    page: int = Field(default=1, ge=1)
+    per_page: int = Field(default=12, ge=1, le=60)
+    q: str | None = Field(
+        default=None,
+        max_length=160,
+        validation_alias=AliasChoices("q", "search", "query", "title"),
+    )
+    author: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, max_length=32)
+    date_window: Literal["24h", "72h", "7d", "30d", "all"] = "all"
+    sort: Literal["relevance", "newest", "oldest"] = "newest"
