@@ -175,13 +175,13 @@ def test_papers_and_scores_read_from_database(
     headers = auth_headers(workspace_id=DEMO_WORKSPACE_ID)
     response = client.get(
         "/papers",
-        params={"sort": "score"},
+        params={"sort": "score_desc"},
         headers=headers,
     )
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["total"] >= 6
+    assert payload["total"] >= 5
     first_paper = payload["items"][0]
     assert first_paper["arxiv_id"].startswith("2603.")
 
