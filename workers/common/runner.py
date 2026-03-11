@@ -96,7 +96,24 @@ class WorkerRunner:
 
 
 def build_default_pipeline(task_types: Iterable[str | TaskType]) -> Pipeline:
-    return Pipeline(LoggingStep(task_type) for task_type in task_types)
+    steps: list[PipelineStep] = []
+    seen_task_types: set[str] = set()
+
+    for task_type in task_types:
+        normalized = normalize_task_type(task_type)
+        if normalized in seen_task_types:
+            continue
+        seen_task_types.add(normalized)
+
+        if normalized == TaskType.FETCH.value:
+            from workers.pdf.steps import DownloadPdfStep
+
+            steps.append(DownloadPdfStep())
+            continue
+
+        steps.append(LoggingStep(task_type))
+
+    return Pipeline(steps)
 
 
 
