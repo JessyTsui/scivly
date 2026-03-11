@@ -571,7 +571,7 @@ INSERT INTO webhooks (
   workspace_id,
   url,
   events,
-  secret_hash,
+  signing_secret,
   is_active,
   created_at
 )
@@ -579,8 +579,8 @@ VALUES (
   '00000000-0000-0000-0000-000000001801',
   '00000000-0000-0000-0000-000000000201',
   'https://api.example.dev/scivly/events',
-  ARRAY['digest.sent', 'paper.matched'],
-  'sha256:demo-webhook-secret',
+  ARRAY['digest.delivered', 'paper.matched'],
+  'whsec_demo_webhook_secret',
   TRUE,
   '2026-03-01T08:40:00Z'
 )
@@ -588,7 +588,7 @@ ON CONFLICT (id) DO UPDATE SET
   workspace_id = EXCLUDED.workspace_id,
   url = EXCLUDED.url,
   events = EXCLUDED.events,
-  secret_hash = EXCLUDED.secret_hash,
+  signing_secret = EXCLUDED.signing_secret,
   is_active = EXCLUDED.is_active,
   created_at = EXCLUDED.created_at;
 
@@ -605,7 +605,7 @@ INSERT INTO webhook_deliveries (
 VALUES (
   '00000000-0000-0000-0000-000000001901',
   '00000000-0000-0000-0000-000000001801',
-  'digest.sent',
+  'digest.delivered',
   '{
     "digest_id":"00000000-0000-0000-0000-000000001301",
     "workspace_id":"00000000-0000-0000-0000-000000000201",

@@ -17,6 +17,7 @@ from app.schemas.common import (
     ReadyResponse,
     UsageStatsOut,
     WebhookCreate,
+    WebhookCreatedOut,
     WebhookOut,
     WebhookUpdate,
 )
@@ -74,6 +75,7 @@ __all__ = [
     "UsageStatsOut",
     "UserOut",
     "WebhookCreate",
+    "WebhookCreatedOut",
     "WebhookOut",
     "WebhookUpdate",
     "WorkspaceCreate",

@@ -6,7 +6,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from time import perf_counter
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Protocol, Sequence
 
 from .queue import normalize_task_type
 from .task import TaskPayload, TaskResult, TaskResultStatus, TaskType
@@ -45,10 +45,21 @@ class IdempotencyStore:
         return f"{step_type}:{idempotency_key}"
 
 
+class PipelineEventEmitter(Protocol):
+    async def emit(
+        self,
+        *,
+        event_type: str,
+        task: TaskPayload,
+        payload: Mapping[str, Any],
+    ) -> None: ...
+
+
 class PipelineStep(ABC):
     """Base class for a retryable, timeout-aware pipeline step."""
 
     step_type: str | TaskType
+    emitted_events: Sequence[str] = ()
     max_attempts: int = 3
     timeout_seconds: float = 300
     backoff_base_seconds: float = 1.0
@@ -144,6 +155,25 @@ class PipelineStep(ABC):
             return float(cost)
         return 0.0
 
+    def build_emitted_event_payload(
+        self,
+        task: TaskPayload,
+        execution_state: Mapping[str, Any],
+        result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "task_id": str(task.task_id),
+            "task_type": normalize_task_type(task.task_type),
+            "workspace_id": str(task.workspace_id),
+            "idempotency_key": task.idempotency_key,
+            "step": self.__class__.__name__,
+            "state": dict(execution_state),
+            "result": dict(result),
+        }
+        if task.paper_id is not None:
+            payload["paper_id"] = str(task.paper_id)
+        return payload
+
     @abstractmethod
     async def execute(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Execute the concrete step."""
@@ -158,12 +188,14 @@ class Pipeline:
         *,
         status_flow: Sequence[str | TaskType] | None = None,
         idempotency_store: IdempotencyStore | None = None,
+        event_emitter: PipelineEventEmitter | None = None,
     ) -> None:
         self.status_flow = tuple(
             normalize_task_type(step_type)
             for step_type in (status_flow or DEFAULT_STATUS_FLOW)
         )
         self.idempotency_store = idempotency_store or IdempotencyStore()
+        self.event_emitter = event_emitter
         self._steps_by_type: dict[str, list[PipelineStep]] = defaultdict(list)
 
         for step in steps:
@@ -192,6 +224,7 @@ class Pipeline:
         step_results: dict[str, dict[str, Any]] = {}
         total_cost = 0.0
         total_duration_ms = 0
+        event_dispatch_errors: list[dict[str, str]] = []
 
         for step in steps:
             result = await step.run(task, execution_state)
@@ -200,6 +233,18 @@ class Pipeline:
             total_cost += result.cost
             total_duration_ms += result.duration_ms
 
+            if self.event_emitter and step.emitted_events:
+                event_payload = step.build_emitted_event_payload(task, execution_state, result.result)
+                for event_type in step.emitted_events:
+                    try:
+                        await self.event_emitter.emit(
+                            event_type=event_type,
+                            task=task,
+                            payload=event_payload,
+                        )
+                    except Exception as exc:
+                        event_dispatch_errors.append({"event_type": event_type, "error": str(exc)})
+
         return TaskResult(
             task_id=task.task_id,
             status=TaskResultStatus.COMPLETED,
@@ -207,6 +252,7 @@ class Pipeline:
                 "steps": step_results,
                 "final": execution_state,
                 "next_task_type": self.next_task_type(task_type),
+                "event_dispatch_errors": event_dispatch_errors,
             },
             cost=total_cost,
             duration_ms=total_duration_ms,
