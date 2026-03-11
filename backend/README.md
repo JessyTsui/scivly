@@ -11,6 +11,11 @@ Auth bootstrap:
 - `SCIVLY_AUTH_AUTHORIZED_PARTIES` should include the frontend origin, e.g. `http://localhost:3100`
 - the auth middleware verifies Bearer tokens and auto-materializes a workspace for first-time authenticated users
 
+Semantic search bootstrap:
+- `SCIVLY_EMBEDDING_PROVIDER=hash` is the default local-safe mode for indexing and query embedding
+- switch to `SCIVLY_EMBEDDING_PROVIDER=openai` with `SCIVLY_EMBEDDING_API_KEY` to use a hosted embedding model
+- `SCIVLY_EMBEDDING_MODEL` defaults to `text-embedding-3-small`, matching the repository pgvector dimension of `1536`
+
 ## Local database workflow
 
 From the repository root:

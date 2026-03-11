@@ -3,16 +3,17 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select
+from sqlalchemy import bindparam, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_current_user, get_db
 from app.middleware.error_handler import APIError
-from app.models import Paper, PaperEnrichment, PaperScore
+from app.models import Paper, PaperEnrichment, PaperScore, Vector
 from app.persistence import format_reason_payload, format_rule_payload
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
 from app.schemas.paper import PaperListParams, PaperOut, PaperScoreOut
+from app.semantic_search import SemanticSearchError, create_embedding_provider, vector_to_pgvector
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
@@ -189,8 +190,52 @@ async def search_papers(
     current_user: UserOut = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[PaperOut]:
-    params = PaperListParams(page=page, per_page=per_page, query=q)
-    return await list_papers(params, current_user, session)
+    try:
+        embedding_provider = create_embedding_provider()
+        query_embedding = await embedding_provider.embed_text(q.strip())
+    except SemanticSearchError as exc:
+        raise APIError(
+            status_code=503,
+            code="semantic_search_unavailable",
+            message=str(exc),
+        ) from exc
+
+    query_vector = vector_to_pgvector(query_embedding)
+    distance = Paper.embedding.op("<=>")(
+        cast(
+            bindparam("query_embedding", query_vector),
+            Vector(embedding_provider.dimensions),
+        )
+    )
+    base_statement = _paper_statement(current_user).where(Paper.embedding.is_not(None))
+
+    total = (
+        await session.execute(
+            select(func.count()).select_from(base_statement.subquery())
+        )
+    ).scalar_one()
+
+    if total == 0:
+        params = PaperListParams(page=page, per_page=per_page, query=q)
+        return await list_papers(params, current_user, session)
+
+    rows = (
+        await session.execute(
+            base_statement
+            .add_columns(distance.label("distance"))
+            .order_by(distance.asc(), Paper.published_at.desc(), Paper.created_at.desc())
+            .params(query_embedding=query_vector)
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+        )
+    ).all()
+
+    return PaginatedResponse[PaperOut](
+        items=[_serialize_paper(row) for row in rows],
+        total=total,
+        page=page,
+        per_page=per_page,
+    )
 
 
 @router.get("/{paper_id}", response_model=PaperOut)

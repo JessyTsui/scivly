@@ -5,6 +5,7 @@ This directory is reserved for Scivly ingestion, enrichment, and delivery worker
 - `arxiv/` for source sync and paper ingestion
 - `digest/` for digest assembly and delivery
 - `common/` for shared pipeline infrastructure
+- `index/` for embedding generation and pgvector indexing
 
 Workers own batch and document-heavy processing. They should not become a second API surface.
 

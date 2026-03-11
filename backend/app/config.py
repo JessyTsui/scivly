@@ -59,6 +59,30 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3100"],
         validation_alias=AliasChoices("SCIVLY_AUTH_AUTHORIZED_PARTIES", "AUTH_AUTHORIZED_PARTIES"),
     )
+    embedding_provider: str = Field(
+        default="hash",
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_PROVIDER", "EMBEDDING_PROVIDER"),
+    )
+    embedding_model: str = Field(
+        default="text-embedding-3-small",
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_MODEL", "EMBEDDING_MODEL"),
+    )
+    embedding_dimensions: int = Field(
+        default=1536,
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_DIMENSIONS", "EMBEDDING_DIMENSIONS"),
+    )
+    embedding_api_base: str = Field(
+        default="https://api.openai.com/v1",
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_API_BASE", "EMBEDDING_API_BASE"),
+    )
+    embedding_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_API_KEY", "EMBEDDING_API_KEY", "OPENAI_API_KEY"),
+    )
+    embedding_timeout_seconds: float = Field(
+        default=20.0,
+        validation_alias=AliasChoices("SCIVLY_EMBEDDING_TIMEOUT_SECONDS", "EMBEDDING_TIMEOUT_SECONDS"),
+    )
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
