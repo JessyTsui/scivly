@@ -4,7 +4,6 @@ import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
-from urllib.parse import urlsplit, urlunsplit
 from uuid import UUID
 
 import asyncpg
@@ -13,9 +12,6 @@ from workers.common.pipeline import PipelineStep
 from workers.common.task import TaskType
 
 from .embedder import EmbeddingProvider, build_paper_embedding_text, create_embedding_provider, vector_to_pgvector
-
-DEFAULT_POSTGRES_USER = "postgres"
-
 
 @dataclass(frozen=True)
 class IndexablePaper:
@@ -266,14 +262,8 @@ def _resolve_database_url() -> str:
 
 
 def _normalize_database_url(database_url: str) -> str:
-    parsed = urlsplit(database_url)
-    if parsed.scheme not in {"postgres", "postgresql"}:
-        return database_url
-
-    if parsed.username:
-        return database_url
-
-    host = parsed.hostname or "localhost"
-    port = f":{parsed.port}" if parsed.port else ""
-    netloc = f"{DEFAULT_POSTGRES_USER}@{host}{port}"
-    return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+    if database_url.startswith("postgresql+asyncpg://"):
+        return database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+    if database_url.startswith("postgres+asyncpg://"):
+        return database_url.replace("postgres+asyncpg://", "postgres://", 1)
+    return database_url

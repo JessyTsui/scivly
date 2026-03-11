@@ -4,6 +4,12 @@ export type WorkspaceRole = "owner" | "admin" | "member";
 export type WorkspacePlan = "Personal" | "Research Pro" | "Lab";
 export type NotificationChannelType = "email" | "telegram" | "discord" | "webhook";
 export type DigestStatus = "draft" | "sent" | "failed";
+export type WebhookEventType =
+  | "paper.matched"
+  | "paper.enriched"
+  | "digest.ready"
+  | "digest.delivered";
+export type WebhookDeliveryStatus = "queued" | "retrying" | "sent" | "failed";
 export type PaperDecision =
   | "drop"
   | "metadata_only"
@@ -85,6 +91,38 @@ export interface ApiKeyCreateInput {
 export interface ApiKeyUpdateInput {
   name?: string;
   scopes?: string[];
+  is_active?: boolean;
+}
+
+export interface WebhookDeliveryPreview {
+  event_type: WebhookEventType;
+  last_status: WebhookDeliveryStatus;
+  last_attempt_at: ApiDateString;
+}
+
+export interface WebhookOut {
+  id: string;
+  url: string;
+  events: WebhookEventType[];
+  is_active: boolean;
+  secret_preview: string;
+  created_at: ApiDateString;
+  deliveries: WebhookDeliveryPreview[];
+}
+
+export interface WebhookCreatedOut extends WebhookOut {
+  signing_secret: string;
+}
+
+export interface WebhookCreateInput {
+  url: string;
+  events: WebhookEventType[];
+  secret?: string | null;
+}
+
+export interface WebhookUpdateInput {
+  url?: string;
+  events?: WebhookEventType[];
   is_active?: boolean;
 }
 

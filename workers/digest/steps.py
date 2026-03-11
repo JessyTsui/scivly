@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 
 from workers.common.pipeline import PipelineStep
 from workers.common.task import TaskType
@@ -14,6 +14,7 @@ class AssembleDigestStep(PipelineStep):
     """Prepare a digest payload from scored papers."""
 
     step_type = TaskType.DELIVER
+    emitted_events = ("digest.ready",)
 
     def __init__(self, *, assembler: DigestAssembler | None = None) -> None:
         super().__init__()
@@ -33,11 +34,25 @@ class AssembleDigestStep(PipelineStep):
             "selected_paper_count": digest["summary"]["paper_count"],
         }
 
+    def build_emitted_event_payload(
+        self,
+        task,
+        execution_state: Mapping[str, Any],
+        result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        payload = super().build_emitted_event_payload(task, execution_state, result)
+        digest = execution_state.get("digest")
+        if isinstance(digest, dict):
+            payload["digest"] = digest
+            payload["paper_count"] = digest.get("summary", {}).get("paper_count")
+        return payload
+
 
 class DeliverDigestStep(PipelineStep):
     """Delivery stub that records the intended channels and timestamp."""
 
     step_type = TaskType.DELIVER
+    emitted_events = ("digest.delivered",)
 
     async def execute(self, payload: dict[str, Any]) -> dict[str, Any]:
         digest = payload.get("digest")
@@ -52,6 +67,21 @@ class DeliverDigestStep(PipelineStep):
                 "digest_title": digest.get("title"),
             }
         }
+
+    def build_emitted_event_payload(
+        self,
+        task,
+        execution_state: Mapping[str, Any],
+        result: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        payload = super().build_emitted_event_payload(task, execution_state, result)
+        digest = execution_state.get("digest")
+        delivery = result.get("delivery")
+        if isinstance(digest, dict):
+            payload["digest"] = digest
+        if isinstance(delivery, dict):
+            payload["delivery"] = delivery
+        return payload
 
     def _normalize_channels(self, value: Any) -> list[str]:
         if value is None:
