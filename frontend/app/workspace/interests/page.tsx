@@ -13,6 +13,7 @@ import {
   removeAuthorWatch,
   updateNotificationChannel,
 } from "@/lib/api/interests";
+import { useScivlySession } from "@/lib/auth/scivly-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,14 +31,35 @@ import { CategoryTag } from "@/components/workspace/CategoryTag";
 import { ProfileForm } from "@/components/workspace/ProfileForm";
 
 export default function WorkspaceInterestsPage() {
+  const session = useScivlySession();
   const queryClient = useQueryClient();
-  const profilesQuery = useQuery({ queryKey: ["profiles"], queryFn: getProfiles });
-  const authorsQuery = useQuery({ queryKey: ["authors"], queryFn: getAuthorWatchlist });
-  const channelsQuery = useQuery({ queryKey: ["channels"], queryFn: getNotificationChannels });
+  const queriesEnabled =
+    session.isLoaded &&
+    session.isSignedIn &&
+    !session.isSyncing &&
+    !session.error &&
+    Boolean(session.workspace);
+  const profilesQuery = useQuery({
+    queryKey: ["profiles"],
+    queryFn: getProfiles,
+    enabled: queriesEnabled,
+  });
+  const authorsQuery = useQuery({
+    queryKey: ["authors"],
+    queryFn: getAuthorWatchlist,
+    enabled: queriesEnabled,
+  });
+  const channelsQuery = useQuery({
+    queryKey: ["channels"],
+    queryFn: getNotificationChannels,
+    enabled: queriesEnabled,
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [authorName, setAuthorName] = useState("");
   const [authorNotes, setAuthorNotes] = useState("");
   const [channelDrafts, setChannelDrafts] = useState<Record<string, string>>({});
+  const combinedError =
+    profilesQuery.error ?? authorsQuery.error ?? channelsQuery.error ?? null;
 
   const createProfileMutation = useMutation({
     mutationFn: createProfile,
@@ -103,6 +125,24 @@ export default function WorkspaceInterestsPage() {
 
   return (
     <div className="space-y-6">
+      {!queriesEnabled ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-[var(--foreground-muted)]">
+            Syncing authenticated workspace context with the backend...
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {combinedError ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-rose-500">
+            {combinedError instanceof Error
+              ? combinedError.message
+              : "Failed to load workspace interests from the backend API."}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
@@ -158,7 +198,7 @@ export default function WorkspaceInterestsPage() {
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button disabled={!queriesEnabled}>
                   <Plus />
                   Add profile
                 </Button>
@@ -252,7 +292,7 @@ export default function WorkspaceInterestsPage() {
                       notes: authorNotes.trim() || undefined,
                     });
                   }}
-                  disabled={addAuthorMutation.isPending || !authorName.trim()}
+                  disabled={!queriesEnabled || addAuthorMutation.isPending || !authorName.trim()}
                 >
                   <UserPlus />
                   Add author
@@ -276,6 +316,7 @@ export default function WorkspaceInterestsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeAuthorMutation.mutate(author.id)}
+                        disabled={!queriesEnabled || removeAuthorMutation.isPending}
                         aria-label={`Remove ${author.author_name}`}
                       >
                         <Trash2 className="size-4" />
@@ -334,6 +375,7 @@ export default function WorkspaceInterestsPage() {
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="secondary"
+                        disabled={!queriesEnabled || updateChannelMutation.isPending}
                         onClick={() =>
                           updateChannelMutation.mutate({
                             id: channel.id,
@@ -348,6 +390,7 @@ export default function WorkspaceInterestsPage() {
                       </Button>
                       <Button
                         variant="outline"
+                        disabled={!queriesEnabled || updateChannelMutation.isPending}
                         onClick={() =>
                           updateChannelMutation.mutate({
                             id: channel.id,

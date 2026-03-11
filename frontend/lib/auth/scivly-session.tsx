@@ -80,6 +80,9 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
     }
 
     if (!isSignedIn) {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("scivly_auth_token");
+      }
       startTransition(() => {
         setBackendUser(null);
         setWorkspace(null);
@@ -96,6 +99,10 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
 
       if (!token) {
         throw new Error("Clerk did not return a session token.");
+      }
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("scivly_auth_token", token);
       }
 
       const [userResponse, workspaceResponse] = await Promise.all([
@@ -119,6 +126,9 @@ export function ScivlySessionProvider({ children }: { children: React.ReactNode 
         setWorkspace(null);
         setError(message);
       });
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("scivly_auth_token");
+      }
     } finally {
       setIsSyncing(false);
     }

@@ -7,9 +7,21 @@ from pydantic import Field
 from app.schemas.common import APIModel
 
 
+class DigestContentSectionOut(APIModel):
+    title: str
+    paper_ids: list[UUID] = Field(default_factory=list)
+    summary: str | None = None
+
+
+class DigestContentOut(APIModel):
+    headline: str | None = None
+    sections: list[DigestContentSectionOut] = Field(default_factory=list)
+
+
 class DigestOut(APIModel):
     id: UUID
     workspace_id: UUID
+    schedule_id: UUID
     title: str
     period_start: datetime
     period_end: datetime
@@ -17,6 +29,7 @@ class DigestOut(APIModel):
     status: Literal["draft", "sent", "failed"]
     channel_types: list[str]
     summary_markdown: str
+    content: DigestContentOut = Field(default_factory=DigestContentOut)
     created_at: datetime
 
 
