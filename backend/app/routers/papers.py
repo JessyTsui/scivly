@@ -1,159 +1,240 @@
-from datetime import datetime, timezone
+from __future__ import annotations
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_current_user
+from app.deps import get_current_user, get_db
 from app.middleware.error_handler import APIError
+from app.models import Paper, PaperEnrichment, PaperScore
+from app.persistence import format_reason_payload, format_rule_payload
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
-from app.schemas.paper import PaperAuthor, PaperListParams, PaperOut, PaperScoreOut
+from app.schemas.paper import PaperListParams, PaperOut, PaperScoreOut
 
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
-PAPERS = {
-    UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"): PaperOut(
-        id=UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-        arxiv_id="2603.01234",
-        version=1,
-        title="Coordinating Long-Horizon Tool Agents with Sparse Self-Critique",
-        abstract="We present a metadata-first agent framework for long-horizon research tasks.",
-        authors=[
-            PaperAuthor(name="Alex Chen", affiliation="Scivly Research"),
-            PaperAuthor(name="Mina Park", affiliation="Open Systems Lab"),
-        ],
-        categories=["cs.AI", "cs.CL"],
-        primary_category="cs.AI",
-        published_at=datetime(2026, 3, 8, 12, 0, tzinfo=timezone.utc),
-        updated_at=datetime(2026, 3, 9, 4, 0, tzinfo=timezone.utc),
-        comment="8 pages, 4 figures, code forthcoming",
-        doi=None,
-        one_line_summary="A practical control loop for research agents that only escalates expensive steps when needed.",
-    ),
-    UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"): PaperOut(
-        id=UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-        arxiv_id="2603.04567",
-        version=2,
-        title="Benchmarking Vision-Language Policies for Low-Latency Robotics",
-        abstract="We benchmark VLA policies across latency-sensitive tabletop manipulation tasks.",
-        authors=[
-            PaperAuthor(name="Jordan Lee", affiliation="Robotics Institute"),
-            PaperAuthor(name="Priya Raman", affiliation="Embodied Intelligence Lab"),
-        ],
-        categories=["cs.RO", "cs.CV"],
-        primary_category="cs.RO",
-        published_at=datetime(2026, 3, 7, 10, 15, tzinfo=timezone.utc),
-        updated_at=datetime(2026, 3, 8, 2, 0, tzinfo=timezone.utc),
-        comment="Project page available",
-        doi="10.48550/arXiv.2603.04567",
-        one_line_summary="Latency-aware evaluation reveals where current VLA policies break under deployment constraints.",
-    ),
-}
 
-PAPER_SCORES = {
-    UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"): [
-        PaperScoreOut(
-            id=UUID("abababab-abab-abab-abab-abababababab"),
-            paper_id=UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-            workspace_id=UUID("22222222-2222-2222-2222-222222222222"),
-            profile_id=UUID("55555555-5555-5555-5555-555555555555"),
-            score_version="v0.1.0",
-            total_score=78.0,
-            topical_relevance=38.0,
-            prestige_priors=9.0,
-            actionability=12.0,
-            profile_fit=9.0,
-            novelty_diversity=8.0,
-            penalties=2.0,
-            threshold_decision="digest_candidate",
-            matched_rules=["keyword:tool use", "category:cs.AI", "comment:code forthcoming"],
-            llm_rerank_delta=4.0,
-            llm_rerank_reasons=["Abstract clearly distinguishes planner and executor roles."],
-            created_at=datetime(2026, 3, 9, 5, 30, tzinfo=timezone.utc),
+def _latest_enrichment_subquery():
+    latest_created = (
+        select(
+            PaperEnrichment.paper_id.label("paper_id"),
+            func.max(PaperEnrichment.created_at).label("created_at"),
         )
-    ],
-    UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"): [
-        PaperScoreOut(
-            id=UUID("cdcdcdcd-cdcd-cdcd-cdcd-cdcdcdcdcdcd"),
-            paper_id=UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-            workspace_id=UUID("22222222-2222-2222-2222-222222222222"),
-            profile_id=UUID("66666666-6666-6666-6666-666666666666"),
-            score_version="v0.1.0",
-            total_score=71.0,
-            topical_relevance=34.0,
-            prestige_priors=11.0,
-            actionability=11.0,
-            profile_fit=8.0,
-            novelty_diversity=9.0,
-            penalties=2.0,
-            threshold_decision="rerank",
-            matched_rules=["keyword:policy learning", "category:cs.RO", "comment:project page"],
-            llm_rerank_delta=2.0,
-            llm_rerank_reasons=["Benchmark coverage maps well to robotics monitoring profile."],
-            created_at=datetime(2026, 3, 8, 6, 0, tzinfo=timezone.utc),
+        .group_by(PaperEnrichment.paper_id)
+        .subquery()
+    )
+
+    return (
+        select(
+            PaperEnrichment.paper_id.label("paper_id"),
+            PaperEnrichment.one_line_summary.label("one_line_summary"),
         )
-    ],
-}
+        .join(
+            latest_created,
+            (PaperEnrichment.paper_id == latest_created.c.paper_id)
+            & (PaperEnrichment.created_at == latest_created.c.created_at),
+        )
+        .subquery()
+    )
 
 
-def _get_paper(paper_id: UUID) -> PaperOut:
-    paper = PAPERS.get(paper_id)
-    if paper is None:
+def _latest_score_subquery(workspace_id: UUID):
+    latest_created = (
+        select(
+            PaperScore.paper_id.label("paper_id"),
+            func.max(PaperScore.created_at).label("created_at"),
+        )
+        .where(PaperScore.workspace_id == workspace_id)
+        .group_by(PaperScore.paper_id)
+        .subquery()
+    )
+
+    return (
+        select(
+            PaperScore.paper_id.label("paper_id"),
+            PaperScore.total_score.label("total_score"),
+        )
+        .join(
+            latest_created,
+            (PaperScore.paper_id == latest_created.c.paper_id)
+            & (PaperScore.created_at == latest_created.c.created_at),
+        )
+        .where(PaperScore.workspace_id == workspace_id)
+        .subquery()
+    )
+
+
+def _serialize_paper(row) -> PaperOut:
+    return PaperOut(
+        id=row.id,
+        arxiv_id=row.arxiv_id,
+        version=row.version,
+        title=row.title,
+        abstract=row.abstract,
+        authors=row.authors or [],
+        categories=row.categories or [],
+        primary_category=row.primary_category or "",
+        published_at=row.published_at or row.updated_at,
+        updated_at=row.updated_at,
+        comment=row.comment,
+        doi=row.doi,
+        one_line_summary=row.one_line_summary,
+    )
+
+
+def _serialize_score(row) -> PaperScoreOut:
+    return PaperScoreOut(
+        id=row.id,
+        paper_id=row.paper_id,
+        workspace_id=row.workspace_id,
+        profile_id=row.profile_id,
+        score_version=row.score_version,
+        total_score=float(row.total_score),
+        topical_relevance=float(row.topical_relevance),
+        prestige_priors=float(row.prestige_priors),
+        actionability=float(row.actionability),
+        profile_fit=float(row.profile_fit),
+        novelty_diversity=float(row.novelty_diversity),
+        penalties=float(row.penalties),
+        threshold_decision=row.threshold_decision,
+        matched_rules=[format_rule_payload(item) for item in row.matched_rules or []],
+        llm_rerank_delta=float(row.llm_rerank_delta),
+        llm_rerank_reasons=[format_reason_payload(item) for item in row.llm_rerank_reasons or []],
+        created_at=row.created_at,
+    )
+
+
+def _paper_statement(current_user: UserOut):
+    enrichment = _latest_enrichment_subquery()
+    score = _latest_score_subquery(current_user.workspace_id)
+    return (
+        select(
+            Paper.id,
+            Paper.arxiv_id,
+            Paper.version,
+            Paper.title,
+            Paper.abstract,
+            Paper.authors,
+            Paper.categories,
+            Paper.primary_category,
+            Paper.published_at,
+            Paper.updated_at,
+            Paper.comment,
+            Paper.doi,
+            enrichment.c.one_line_summary,
+            score.c.total_score,
+        )
+        .outerjoin(enrichment, enrichment.c.paper_id == Paper.id)
+        .outerjoin(score, score.c.paper_id == Paper.id)
+    )
+
+
+async def _get_paper_row(session: AsyncSession, paper_id: UUID, current_user: UserOut):
+    row = (
+        await session.execute(
+            _paper_statement(current_user)
+            .where(Paper.id == paper_id)
+        )
+    ).one_or_none()
+    if row is None:
         raise APIError(status_code=404, code="paper_not_found", message="Paper not found.")
-    return paper
+    return row
 
 
 @router.get("", response_model=PaginatedResponse[PaperOut])
-def list_papers(
+async def list_papers(
     params: PaperListParams = Depends(),
-    _: UserOut = Depends(get_current_user),
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[PaperOut]:
-    items = list(PAPERS.values())
-    if params.query:
-        needle = params.query.lower()
-        items = [
-            paper
-            for paper in items
-            if needle in paper.title.lower() or needle in paper.abstract.lower()
-        ]
-    if params.category:
-        items = [paper for paper in items if params.category in paper.categories]
-    if params.sort == "published_at":
-        items = sorted(items, key=lambda paper: paper.published_at, reverse=True)
-    else:
-        items = sorted(
-            items,
-            key=lambda paper: PAPER_SCORES.get(paper.id, [])[0].total_score if PAPER_SCORES.get(paper.id) else 0,
-            reverse=True,
-        )
+    statement = _paper_statement(current_user)
 
-    start = (params.page - 1) * params.per_page
-    end = start + params.per_page
+    if params.query:
+        needle = f"%{params.query.strip()}%"
+        statement = statement.where(Paper.title.ilike(needle) | Paper.abstract.ilike(needle))
+    if params.category:
+        statement = statement.where(Paper.categories.any(params.category))
+
+    total = (
+        await session.execute(select(func.count()).select_from(statement.subquery()))
+    ).scalar_one()
+
+    if params.sort == "score":
+        statement = statement.order_by(statement.selected_columns.total_score.desc().nullslast(), Paper.published_at.desc())
+    else:
+        statement = statement.order_by(Paper.published_at.desc(), Paper.created_at.desc())
+
+    rows = (
+        await session.execute(
+            statement.offset((params.page - 1) * params.per_page).limit(params.per_page)
+        )
+    ).all()
+
     return PaginatedResponse[PaperOut](
-        items=items[start:end],
-        total=len(items),
+        items=[_serialize_paper(row) for row in rows],
+        total=total,
         page=params.page,
         per_page=params.per_page,
     )
 
 
 @router.get("/search", response_model=PaginatedResponse[PaperOut])
-def search_papers(
+async def search_papers(
     q: str = Query(min_length=2, max_length=160),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=10, ge=1, le=100),
-    _: UserOut = Depends(get_current_user),
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[PaperOut]:
     params = PaperListParams(page=page, per_page=per_page, query=q)
-    return list_papers(params, _)
+    return await list_papers(params, current_user, session)
 
 
 @router.get("/{paper_id}", response_model=PaperOut)
-def get_paper(paper_id: UUID, _: UserOut = Depends(get_current_user)) -> PaperOut:
-    return _get_paper(paper_id)
+async def get_paper(
+    paper_id: UUID,
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> PaperOut:
+    return _serialize_paper(await _get_paper_row(session, paper_id, current_user))
 
 
 @router.get("/{paper_id}/scores", response_model=list[PaperScoreOut])
-def get_paper_scores(paper_id: UUID, _: UserOut = Depends(get_current_user)) -> list[PaperScoreOut]:
-    _get_paper(paper_id)
-    return PAPER_SCORES.get(paper_id, [])
+async def get_paper_scores(
+    paper_id: UUID,
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> list[PaperScoreOut]:
+    await _get_paper_row(session, paper_id, current_user)
+
+    rows = (
+        await session.execute(
+            select(
+                PaperScore.id,
+                PaperScore.paper_id,
+                PaperScore.workspace_id,
+                PaperScore.profile_id,
+                PaperScore.score_version,
+                PaperScore.total_score,
+                PaperScore.topical_relevance,
+                PaperScore.prestige_priors,
+                PaperScore.actionability,
+                PaperScore.profile_fit,
+                PaperScore.novelty_diversity,
+                PaperScore.penalties,
+                PaperScore.threshold_decision,
+                PaperScore.matched_rules,
+                PaperScore.llm_rerank_delta,
+                PaperScore.llm_rerank_reasons,
+                PaperScore.created_at,
+            )
+            .where(PaperScore.paper_id == paper_id)
+            .where(PaperScore.workspace_id == current_user.workspace_id)
+            .order_by(PaperScore.created_at.desc())
+        )
+    ).all()
+
+    return [_serialize_score(row) for row in rows]

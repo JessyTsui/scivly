@@ -8,10 +8,14 @@ Apply migrations in filename order:
 
 1. `001_initial_schema.sql`
 2. `002_pgvector.sql`
+3. `003_author_watchlist_created_at.sql`
+4. `004_chat_sessions_title.sql`
+5. `005_api_keys_is_active.sql`
 
 The first migration creates the core relational schema and enables `pgcrypto` for
 `gen_random_uuid()`. The second migration enables `pgvector` and adds vector columns to
-`topic_profiles` and `papers`.
+`topic_profiles` and `papers`. The later migrations backfill API-facing columns that were
+missing from the initial scaffold.
 
 ## Prerequisites
 
@@ -22,13 +26,26 @@ The first migration creates the core relational schema and enables `pgcrypto` fo
 
 ## Apply Migrations
 
-Use `psql` with `ON_ERROR_STOP` enabled so the process exits on the first failure:
+Use either the checked-in helper script or `psql` directly.
+
+### Recommended helper
+
+```bash
+docker compose up -d db redis
+./scripts/db.sh migrate
+./scripts/db.sh seed
+```
+
+### Direct `psql`
 
 ```bash
 export DATABASE_URL="postgresql://user:password@localhost:5432/scivly"
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/001_initial_schema.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/002_pgvector.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/003_author_watchlist_created_at.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/004_chat_sessions_title.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/005_api_keys_is_active.sql
 ```
 
 ## Load Demo Seeds

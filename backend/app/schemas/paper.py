@@ -41,7 +41,17 @@ class PaperScoreOut(APIModel):
     profile_fit: float
     novelty_diversity: float
     penalties: float
-    threshold_decision: Literal["drop", "metadata_only", "pdf_queue", "rerank", "digest_candidate"]
+    threshold_decision: Literal[
+        "drop",
+        "metadata_only",
+        "pdf_queue",
+        "pdf_candidate",
+        "rerank",
+        "rerank_candidate",
+        "digest_candidate",
+        "source_fetch",
+        "source_fetch_candidate",
+    ]
     matched_rules: list[str]
     llm_rerank_delta: float
     llm_rerank_reasons: list[str]

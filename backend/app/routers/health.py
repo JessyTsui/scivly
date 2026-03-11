@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.config import Settings
+from app.db import get_database_status
 from app.deps import get_settings_dep
 from app.schemas.common import HealthResponse, ReadyResponse
 
@@ -13,7 +14,7 @@ def health(settings: Settings = Depends(get_settings_dep)) -> HealthResponse:
 
 
 @router.get("/ready", response_model=ReadyResponse, summary="Readiness check")
-def ready(settings: Settings = Depends(get_settings_dep)) -> ReadyResponse:
+async def ready(settings: Settings = Depends(get_settings_dep)) -> ReadyResponse:
     return ReadyResponse(
         status="ok",
         version=settings.app_version,
@@ -21,5 +22,6 @@ def ready(settings: Settings = Depends(get_settings_dep)) -> ReadyResponse:
             "config": "ok",
             "routers": "ok",
             "auth_middleware": "ok",
+            "database": await get_database_status(),
         },
     )

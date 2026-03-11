@@ -34,6 +34,7 @@ class ChatSession(Base):
         ForeignKey("papers.id", ondelete="SET NULL"),
     )
     session_type: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 

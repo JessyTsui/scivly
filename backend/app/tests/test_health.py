@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-from app.routers.workspaces import WORKSPACES
 
 
 def test_health_returns_ok(client: TestClient) -> None:
@@ -17,6 +16,7 @@ def test_ready_returns_ok(client: TestClient) -> None:
     assert payload["status"] == "ok"
     assert payload["version"] == "0.1.0"
     assert payload["checks"]["auth_middleware"] == "ok"
+    assert payload["checks"]["database"] == "ok"
 
 
 def test_auth_me_returns_mock_user(client: TestClient) -> None:
@@ -70,7 +70,12 @@ def test_workspace_creation_always_returns_owner_role(client: TestClient) -> Non
     )
 
     assert response.status_code == 201
-    assert response.json()["role"] == "owner"
+    payload = response.json()
+    assert payload["role"] == "owner"
+
+    follow_up = client.get(f"/workspaces/{payload['id']}")
+    assert follow_up.status_code == 200
+    assert follow_up.json()["slug"] == "signals-lab"
 
 
 def test_openapi_version_matches_health_version(client: TestClient) -> None:
@@ -81,16 +86,37 @@ def test_openapi_version_matches_health_version(client: TestClient) -> None:
 
 
 def test_delete_workspace_removes_it_from_follow_up_reads(client: TestClient) -> None:
-    workspace_id = "33333333-3333-3333-3333-333333333333"
-    original_workspace = WORKSPACES.copy()
+    workspace_id = "00000000-0000-0000-0000-000000000201"
 
-    try:
-        delete_response = client.delete(f"/workspaces/{workspace_id}")
-        assert delete_response.status_code == 204
+    delete_response = client.delete(f"/workspaces/{workspace_id}")
+    assert delete_response.status_code == 204
 
-        get_response = client.get(f"/workspaces/{workspace_id}")
-        assert get_response.status_code == 404
-        assert get_response.json()["error"] == "workspace_not_found"
-    finally:
-        WORKSPACES.clear()
-        WORKSPACES.update(original_workspace)
+    get_response = client.get(f"/workspaces/{workspace_id}")
+    assert get_response.status_code == 404
+    assert get_response.json()["error"] == "workspace_not_found"
+
+
+def test_list_workspaces_reads_seeded_rows(client: TestClient) -> None:
+    response = client.get("/workspaces")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["items"][0]["name"] == "Scivly Demo Workspace"
+    assert payload["items"][0]["role"] == "owner"
+
+
+def test_papers_and_scores_read_from_database(client: TestClient) -> None:
+    response = client.get("/papers")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] >= 6
+    first_paper = payload["items"][0]
+    assert first_paper["arxiv_id"].startswith("2603.")
+
+    score_response = client.get(f"/papers/{first_paper['id']}/scores")
+    assert score_response.status_code == 200
+    scores = score_response.json()
+    assert scores
+    assert scores[0]["workspace_id"] == "00000000-0000-0000-0000-000000000201"

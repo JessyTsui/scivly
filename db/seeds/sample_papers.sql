@@ -474,6 +474,7 @@ INSERT INTO chat_sessions (
   workspace_id,
   user_id,
   paper_id,
+  title,
   session_type,
   created_at
 )
@@ -482,6 +483,7 @@ VALUES (
   '00000000-0000-0000-0000-000000000201',
   '00000000-0000-0000-0000-000000000101',
   '00000000-0000-0000-0000-000000001001',
+  'Agentic retrieval paper QA',
   'paper_qa',
   '2026-03-07T09:00:00Z'
 )
@@ -489,6 +491,7 @@ ON CONFLICT (id) DO UPDATE SET
   workspace_id = EXCLUDED.workspace_id,
   user_id = EXCLUDED.user_id,
   paper_id = EXCLUDED.paper_id,
+  title = EXCLUDED.title,
   session_type = EXCLUDED.session_type,
   created_at = EXCLUDED.created_at;
 
@@ -537,6 +540,7 @@ INSERT INTO api_keys (
   scopes,
   last_used_at,
   expires_at,
+  is_active,
   created_at
 )
 VALUES (
@@ -548,6 +552,7 @@ VALUES (
   ARRAY['papers:read', 'digests:read', 'chat:write'],
   '2026-03-07T10:10:00Z',
   '2026-09-01T00:00:00Z',
+  TRUE,
   '2026-03-01T08:30:00Z'
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -558,6 +563,7 @@ ON CONFLICT (id) DO UPDATE SET
   scopes = EXCLUDED.scopes,
   last_used_at = EXCLUDED.last_used_at,
   expires_at = EXCLUDED.expires_at,
+  is_active = EXCLUDED.is_active,
   created_at = EXCLUDED.created_at;
 
 INSERT INTO webhooks (

@@ -1,8 +1,10 @@
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
 from fastapi import Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
+from app.db import get_db_session
 from app.middleware.error_handler import APIError
 from app.schemas.auth import UserOut
 
@@ -17,8 +19,9 @@ def get_settings_dep() -> Settings:
     return get_settings()
 
 
-def get_db() -> Iterator[None]:
-    yield None
+async def get_db() -> AsyncIterator[AsyncSession]:
+    async for session in get_db_session():
+        yield session
 
 
 def get_current_user(request: Request) -> UserOut:

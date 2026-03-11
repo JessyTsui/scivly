@@ -107,7 +107,8 @@ INSERT INTO author_watchlist (
   workspace_id,
   author_name,
   arxiv_author_id,
-  notes
+  notes,
+  created_at
 )
 VALUES
   (
@@ -115,20 +116,23 @@ VALUES
     '00000000-0000-0000-0000-000000000201',
     'Sara Hooker',
     'sara-hooker',
-    'Tracks practical model evaluation and robustness work.'
+    'Tracks practical model evaluation and robustness work.',
+    '2026-03-01T08:13:00Z'
   ),
   (
     '00000000-0000-0000-0000-000000000402',
     '00000000-0000-0000-0000-000000000201',
     'Chelsea Finn',
     'chelsea-finn',
-    'Tracks embodied learning and robot policy research.'
+    'Tracks embodied learning and robot policy research.',
+    '2026-03-01T08:14:00Z'
   )
 ON CONFLICT (id) DO UPDATE SET
   workspace_id = EXCLUDED.workspace_id,
   author_name = EXCLUDED.author_name,
   arxiv_author_id = EXCLUDED.arxiv_author_id,
-  notes = EXCLUDED.notes;
+  notes = EXCLUDED.notes,
+  created_at = EXCLUDED.created_at;
 
 INSERT INTO notification_channels (
   id,

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     api_host: str = "0.0.0.0"
     api_port: int = 8100
+    database_url: str = Field(
+        default="postgresql://localhost:5432/scivly",
+        validation_alias=AliasChoices("SCIVLY_DATABASE_URL", "DATABASE_URL"),
+    )
+    database_echo: bool = False
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        validation_alias=AliasChoices("SCIVLY_REDIS_URL", "REDIS_URL"),
+    )
+    run_migrations_on_startup: bool = False
     cors_allowed_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3100",

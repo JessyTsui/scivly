@@ -9,8 +9,8 @@ from typing import Literal, cast
 from app.schemas.auth import UserOut
 from app.schemas.common import ErrorResponse
 
-DEFAULT_USER_ID = UUID("11111111-1111-1111-1111-111111111111")
-DEFAULT_WORKSPACE_ID = UUID("22222222-2222-2222-2222-222222222222")
+DEFAULT_USER_ID = UUID("00000000-0000-0000-0000-000000000101")
+DEFAULT_WORKSPACE_ID = UUID("00000000-0000-0000-0000-000000000201")
 UserRole = Literal["owner", "admin", "member"]
 VALID_ROLES: set[UserRole] = {"owner", "admin", "member"}
 

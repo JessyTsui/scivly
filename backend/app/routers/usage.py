@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_current_user
+from app.deps import get_current_user, get_db
+from app.middleware.error_handler import APIError
+from app.models import UsageRecord
 from app.schemas.auth import UserOut
 from app.schemas.common import UsageBucketOut, UsageStatsOut
 
@@ -11,22 +17,58 @@ router = APIRouter(prefix="/usage", tags=["Usage"])
 
 
 @router.get("", response_model=UsageStatsOut)
-def get_usage(
+async def get_usage(
     workspace_id: UUID | None = Query(default=None),
-    _: UserOut = Depends(get_current_user),
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> UsageStatsOut:
-    target_workspace = workspace_id or UUID("22222222-2222-2222-2222-222222222222")
+    if workspace_id is not None and workspace_id != current_user.workspace_id:
+        raise APIError(
+            status_code=403,
+            code="workspace_access_denied",
+            message="You do not have access to that workspace.",
+        )
+
+    target_workspace = workspace_id or current_user.workspace_id
+    rows = (
+        await session.execute(
+            select(
+                UsageRecord.record_type,
+                func.sum(UsageRecord.quantity).label("quantity"),
+                func.avg(UsageRecord.unit_cost).label("unit_cost"),
+                func.sum(UsageRecord.quantity * UsageRecord.unit_cost).label("total_cost"),
+            )
+            .where(UsageRecord.workspace_id == target_workspace)
+            .group_by(UsageRecord.record_type)
+            .order_by(UsageRecord.record_type.asc())
+        )
+    ).all()
+
+    period_row = (
+        await session.execute(
+            select(
+                func.min(UsageRecord.recorded_at).label("period_start"),
+                func.max(UsageRecord.recorded_at).label("period_end"),
+            )
+            .where(UsageRecord.workspace_id == target_workspace)
+        )
+    ).one()
+
     buckets = [
-        UsageBucketOut(record_type="api_call", quantity=1240, unit_cost=0.0004, total_cost=0.496),
-        UsageBucketOut(record_type="llm_token", quantity=182000, unit_cost=0.000002, total_cost=0.364),
-        UsageBucketOut(record_type="pdf_download", quantity=41, unit_cost=0.01, total_cost=0.41),
-        UsageBucketOut(record_type="delivery", quantity=19, unit_cost=0.02, total_cost=0.38),
+        UsageBucketOut(
+            record_type=row.record_type,
+            quantity=float(row.quantity or 0),
+            unit_cost=float(row.unit_cost or 0),
+            total_cost=float(row.total_cost or 0),
+        )
+        for row in rows
     ]
+
     return UsageStatsOut(
         workspace_id=target_workspace,
-        period_start=datetime(2026, 3, 1, 0, 0, tzinfo=timezone.utc),
-        period_end=datetime(2026, 3, 31, 23, 59, tzinfo=timezone.utc),
-        total_cost=round(sum(bucket.total_cost for bucket in buckets), 3),
+        period_start=period_row.period_start or datetime.now(timezone.utc),
+        period_end=period_row.period_end or datetime.now(timezone.utc),
+        total_cost=round(sum(bucket.total_cost for bucket in buckets), 6),
         by_type=buckets,
         overage_warning=False,
     )

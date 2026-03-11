@@ -5,15 +5,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.db import close_engine, run_migrations
 from app.middleware import AuthContextMiddleware, register_exception_handlers
 from app.routers import ROUTERS
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings = get_settings()
+    if settings.run_migrations_on_startup:
+        await run_migrations()
     app.state.started = True
     yield
     app.state.started = False
+    await close_engine()
 
 
 def create_app() -> FastAPI:
@@ -21,7 +26,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
-        description="Mock-first FastAPI skeleton for the Scivly backend service.",
+        description="FastAPI service for the Scivly paper intelligence platform.",
         lifespan=lifespan,
         openapi_tags=[
             {"name": "Health", "description": "Liveness and readiness checks."},

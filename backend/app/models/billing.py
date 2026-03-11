@@ -33,6 +33,7 @@ class ApiKey(Base):
     scopes: Mapped[list[str]] = mapped_column(ARRAY(Text()), nullable=False, server_default=text("'{}'::text[]"))
     last_used_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 

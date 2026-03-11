@@ -127,6 +127,7 @@ class AuthorWatchlist(Base):
     author_name: Mapped[str] = mapped_column(Text, nullable=False)
     arxiv_author_id: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 
 class NotificationChannel(Base):
