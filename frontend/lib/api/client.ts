@@ -53,11 +53,12 @@ function buildUrl(path: string, query?: ApiRequestOptions<unknown>["query"]) {
 }
 
 export function isMockApiEnabled() {
-  return process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
+  return process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 }
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions<T> = {}) {
   const { authToken, body, headers, query, schema, ...init } = options;
+  const resolvedAuthToken = resolveAuthToken(authToken);
   const isReadableStream =
     typeof ReadableStream !== "undefined" && body instanceof ReadableStream;
   const isJsonBody =
@@ -78,7 +79,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T> 
     headers: {
       Accept: "application/json",
       ...(isJsonBody ? { "Content-Type": "application/json" } : {}),
-      ...(resolveAuthToken(authToken) ? { Authorization: `Bearer ${resolveAuthToken(authToken)}` } : {}),
+      ...(resolvedAuthToken ? { Authorization: `Bearer ${resolvedAuthToken}` } : {}),
       ...headers,
     },
     body: resolvedBody,

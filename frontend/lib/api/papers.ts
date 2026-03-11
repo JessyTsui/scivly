@@ -98,6 +98,16 @@ export async function getPaper(paperId: string): Promise<PaperOut> {
 }
 
 export async function getPaperScores(paperId: string): Promise<PaperScoreOut> {
+  if (!isMockApiEnabled()) {
+    const scores = await apiRequest<PaperScoreOut[]>(`/papers/${paperId}/scores`);
+
+    if (!scores.length) {
+      throw new Error(`Paper ${paperId} does not have a score snapshot yet.`);
+    }
+
+    return scores[0];
+  }
+
   const paper = await getPaper(paperId);
   return clone(paper.score);
 }

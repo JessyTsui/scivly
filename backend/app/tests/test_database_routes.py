@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import asyncio
 import os
 
@@ -16,14 +17,27 @@ def _run_sql(statement: str) -> None:
     asyncio.run(_execute())
 
 
-def test_usage_rejects_other_workspace_ids(client: TestClient) -> None:
-    response = client.get("/usage", params={"workspace_id": "00000000-0000-0000-0000-000000009999"})
+def test_usage_rejects_other_workspace_ids(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
+    response = client.get(
+        "/usage",
+        params={"workspace_id": "00000000-0000-0000-0000-000000009999"},
+        headers=auth_headers(
+            local_user_id="00000000-0000-0000-0000-000000000101",
+            workspace_id="00000000-0000-0000-0000-000000000201",
+        ),
+    )
 
     assert response.status_code == 403
     assert response.json()["error"] == "workspace_access_denied"
 
 
-def test_create_chat_session_returns_404_for_unknown_paper(client: TestClient) -> None:
+def test_create_chat_session_returns_404_for_unknown_paper(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
     response = client.post(
         "/chat/sessions",
         json={
@@ -32,13 +46,20 @@ def test_create_chat_session_returns_404_for_unknown_paper(client: TestClient) -
             "session_type": "paper_qa",
             "title": "Missing paper",
         },
+        headers=auth_headers(
+            local_user_id="00000000-0000-0000-0000-000000000101",
+            workspace_id="00000000-0000-0000-0000-000000000201",
+        ),
     )
 
     assert response.status_code == 404
     assert response.json()["error"] == "paper_not_found"
 
 
-def test_digest_preview_returns_unique_paper_ids(client: TestClient) -> None:
+def test_digest_preview_returns_unique_paper_ids(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
     _run_sql(
         """
         INSERT INTO paper_scores (
@@ -90,6 +111,10 @@ def test_digest_preview_returns_unique_paper_ids(client: TestClient) -> None:
             "period_end": "2026-03-07T23:59:59Z",
             "limit": 5,
         },
+        headers=auth_headers(
+            local_user_id="00000000-0000-0000-0000-000000000101",
+            workspace_id="00000000-0000-0000-0000-000000000201",
+        ),
     )
 
     assert response.status_code == 200
