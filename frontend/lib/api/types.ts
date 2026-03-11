@@ -164,6 +164,47 @@ export interface PaperListParams {
   search?: string;
 }
 
+export type PublicPaperSortOption = "relevance" | "newest" | "oldest";
+
+export interface PublicPaperFigure {
+  label: string;
+  description: string;
+}
+
+export interface PublicPaperOut {
+  id: string;
+  arxiv_id: string;
+  version: number;
+  title: string;
+  abstract: string;
+  authors: AuthorInfo[];
+  categories: string[];
+  primary_category: string;
+  comment?: string | null;
+  journal_ref?: string | null;
+  doi?: string | null;
+  published_at: ApiDateString;
+  updated_at: ApiDateString;
+  title_zh?: string | null;
+  abstract_zh?: string | null;
+  one_line_summary: string;
+  key_points: string[];
+  method_summary?: string | null;
+  conclusion_summary?: string | null;
+  limitations?: string | null;
+  figures: PublicPaperFigure[];
+}
+
+export interface PublicPaperListParams {
+  page?: number;
+  per_page?: number;
+  q?: string;
+  author?: string;
+  category?: string;
+  date_window?: DateWindow;
+  sort?: PublicPaperSortOption;
+}
+
 export interface TopicProfileOut {
   id: string;
   workspace_id: string;

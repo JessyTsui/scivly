@@ -18,6 +18,7 @@ import {
 
 export const publicNavigation = [
   { label: "Product", href: "/#story" },
+  { label: "Library", href: "/papers" },
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Docs", href: "/docs" },
