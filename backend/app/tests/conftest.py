@@ -1,3 +1,4 @@
+from collections.abc import Generator
 import sys
 from pathlib import Path
 
@@ -12,6 +13,6 @@ from app.main import app  # noqa: E402
 
 
 @pytest.fixture()
-def client() -> TestClient:
+def client() -> Generator[TestClient, None, None]:
     with TestClient(app) as test_client:
         yield test_client

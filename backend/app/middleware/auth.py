@@ -4,13 +4,15 @@ from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from typing import Literal, cast
 
 from app.schemas.auth import UserOut
 from app.schemas.common import ErrorResponse
 
 DEFAULT_USER_ID = UUID("11111111-1111-1111-1111-111111111111")
 DEFAULT_WORKSPACE_ID = UUID("22222222-2222-2222-2222-222222222222")
-VALID_ROLES = {"owner", "admin", "member"}
+UserRole = Literal["owner", "admin", "member"]
+VALID_ROLES: set[UserRole] = {"owner", "admin", "member"}
 
 
 def _invalid_auth_header_response(request_id: str, header_name: str, reason: str) -> JSONResponse:
@@ -71,6 +73,7 @@ class AuthContextMiddleware(BaseHTTPMiddleware):
                 "x-scivly-user-role",
                 "Expected one of: owner, admin, member.",
             )
+        validated_role = cast(UserRole, role)
 
         try:
             request.state.current_user = UserOut(
@@ -79,7 +82,7 @@ class AuthContextMiddleware(BaseHTTPMiddleware):
                 name=name,
                 avatar_url="https://images.scivly.dev/avatar/demo-researcher.png",
                 workspace_id=workspace_id,
-                role=role,
+                role=validated_role,
             )
         except ValidationError:
             # Exceptions raised inside BaseHTTPMiddleware bypass the normal FastAPI exception handlers.

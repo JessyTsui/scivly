@@ -49,9 +49,9 @@ class PipelineStep(ABC):
     """Base class for a retryable, timeout-aware pipeline step."""
 
     step_type: str | TaskType
-    max_attempts = 3
-    timeout_seconds = 300
-    backoff_base_seconds = 1.0
+    max_attempts: int = 3
+    timeout_seconds: float = 300
+    backoff_base_seconds: float = 1.0
 
     def __init__(
         self,

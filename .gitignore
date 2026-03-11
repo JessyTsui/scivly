@@ -13,6 +13,7 @@ dist/
 build/
 coverage/
 frontend/screenshots/
+*.tsbuildinfo
 *.pyc
 *.pyo
 *.pyd

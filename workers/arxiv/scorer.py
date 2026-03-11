@@ -6,20 +6,13 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
-from .models import ArxivPaper, ComponentScores, ScoringProfile, ScoringResult
+from workers.common.config import (
+    load_default_triage_profile,
+    load_institution_priors,
+    load_lab_priors,
+)
 
-try:
-    from workers.common.config import (
-        load_default_triage_profile,
-        load_institution_priors,
-        load_lab_priors,
-    )
-except ModuleNotFoundError:  # pragma: no cover - pytest package resolution fallback
-    from common.config import (
-        load_default_triage_profile,
-        load_institution_priors,
-        load_lab_priors,
-    )
+from .models import ArxivPaper, ComponentScores, ScoringProfile, ScoringResult
 
 
 DEFAULT_CATEGORY_KEYWORDS: dict[str, list[str]] = {

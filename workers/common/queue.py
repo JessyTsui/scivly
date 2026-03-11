@@ -10,12 +10,15 @@ from dataclasses import dataclass
 from threading import Condition
 from typing import Any, Deque
 
+from .task import TaskPayload, TaskResult, TaskStatus, TaskType
+
+RedisClient: type[Any] | None
 try:
-    from redis import Redis as RedisClient
+    from redis import Redis as _RedisClient
 except ModuleNotFoundError:  # pragma: no cover - depends on local optional dependency state
     RedisClient = None
-
-from .task import TaskPayload, TaskResult, TaskStatus, TaskType
+else:
+    RedisClient = _RedisClient
 
 DEFAULT_REDIS_URL = "redis://localhost:6399/0"
 
@@ -158,7 +161,7 @@ class RedisTaskQueue(TaskQueue):
         prefix: str = "scivly",
     ) -> None:
         super().__init__(max_attempts=max_attempts)
-        self.redis_url = redis_url or os.getenv("REDIS_URL", DEFAULT_REDIS_URL)
+        self.redis_url: str = redis_url or os.getenv("REDIS_URL") or DEFAULT_REDIS_URL
         self.prefix = prefix
         self.client = self._build_client()
 
@@ -259,7 +262,7 @@ def build_task_queue(
     redis_url: str | None = None,
     max_attempts: int = 3,
 ) -> TaskQueue:
-    selected_backend = (backend or os.getenv("SCIVLY_QUEUE_BACKEND", "memory")).lower()
+    selected_backend = (backend or os.getenv("SCIVLY_QUEUE_BACKEND") or "memory").lower()
     if selected_backend == "memory":
         return InMemoryTaskQueue(max_attempts=max_attempts)
     if selected_backend == "redis":
