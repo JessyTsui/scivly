@@ -388,7 +388,7 @@ export function WebhookSettingsPanel() {
                     Signing secret
                   </p>
                   <code className="mt-3 block overflow-x-auto font-[family:var(--font-mono)] text-sm leading-7">
-                    {createdWebhook.signing_secret}
+                    {createdWebhook.secret_hash}
                   </code>
                 </div>
                 <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/84 p-4">
@@ -396,14 +396,14 @@ export function WebhookSettingsPanel() {
                     Verification starter
                   </p>
                   <pre className="mt-3 overflow-x-auto whitespace-pre-wrap font-[family:var(--font-mono)] text-sm leading-7">
-                    {buildWebhookVerificationExample(createdWebhook.signing_secret)}
+                    {buildWebhookVerificationExample(createdWebhook.secret_hash)}
                   </pre>
                 </div>
               </CardContent>
               <CardFooter className="justify-end">
                 <Button
                   variant="secondary"
-                  onClick={() => handleCopy(createdWebhook.signing_secret, "Signing secret")}
+                  onClick={() => handleCopy(createdWebhook.secret_hash, "Signing secret")}
                 >
                   <Copy />
                   Copy secret

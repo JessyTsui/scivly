@@ -142,7 +142,7 @@ export interface WebhookOut {
 }
 
 export interface WebhookCreatedOut extends WebhookOut {
-  signing_secret: string;
+  secret_hash: string;
 }
 
 export interface WebhookCreateInput {

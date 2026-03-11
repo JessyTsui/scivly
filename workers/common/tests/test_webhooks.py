@@ -25,7 +25,7 @@ class FakeWebhookRepository:
             id=uuid4(),
             workspace_id=uuid4(),
             url="https://hooks.example.com/retry",
-            signing_secret="whsec_retry_secret",
+            secret_hash="whsec_retry_secret",
         )
         self.created: list[dict[str, Any]] = []
         self.updates: list[dict[str, Any]] = []

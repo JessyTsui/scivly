@@ -121,4 +121,4 @@ class WebhookOut(APIModel):
 
 
 class WebhookCreatedOut(WebhookOut):
-    signing_secret: str
+    secret_hash: str

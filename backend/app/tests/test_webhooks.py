@@ -30,8 +30,8 @@ def test_create_update_delete_webhook(
 
     assert create_response.status_code == 201
     created = create_response.json()
-    assert created["signing_secret"].startswith("whsec_")
-    assert created["secret_preview"].endswith(created["signing_secret"][-4:])
+    assert created["secret_hash"].startswith("whsec_")
+    assert created["secret_preview"].endswith(created["secret_hash"][-4:])
     assert created["events"] == ["paper.matched", "digest.ready"]
 
     list_response = client.get("/webhooks", headers=auth_headers(workspace_id=TEST_WORKSPACE_ID))
@@ -112,7 +112,7 @@ def test_registered_webhook_receives_signed_match_event(
     assert request.headers[WEBHOOK_EVENT_HEADER] == "paper.matched"
     assert request.headers["x-scivly-idempotency-key"] == "match-task-001"
     assert verify_webhook_signature(
-        created["signing_secret"],
+        created["secret_hash"],
         request.content,
         request.headers[WEBHOOK_SIGNATURE_HEADER],
     )

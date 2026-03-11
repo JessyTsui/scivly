@@ -120,7 +120,7 @@ class WebhookSubscription:
     id: UUID
     workspace_id: UUID
     url: str
-    signing_secret: str
+    secret_hash: str
 
 
 @dataclass(frozen=True)
@@ -189,7 +189,7 @@ class AsyncpgWebhookRepository:
         connection = await self._get_connection()
         rows = await connection.fetch(
             """
-            SELECT id, workspace_id, url, signing_secret
+            SELECT id, workspace_id, url, secret_hash
             FROM webhooks
             WHERE workspace_id = $1
               AND is_active = TRUE
@@ -204,7 +204,7 @@ class AsyncpgWebhookRepository:
                 id=row["id"],
                 workspace_id=row["workspace_id"],
                 url=row["url"],
-                signing_secret=row["signing_secret"],
+                secret_hash=row["secret_hash"],
             )
             for row in rows
         ]
@@ -375,7 +375,7 @@ class WebhookEventEmitter:
         response_status_code: int | None = None
 
         for attempt in range(1, self.max_attempts + 1):
-            signature = sign_webhook_payload(subscription.signing_secret, serialized_payload)
+            signature = sign_webhook_payload(subscription.secret_hash, serialized_payload)
             attempted_at = utc_now()
             response_status_code = None
 

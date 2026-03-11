@@ -580,10 +580,10 @@ G3                       — depends on B1 + B3
 
 | Worktree | Task | Summary |
 |----------|------|---------|
-| wt-c2 | 🔲 C2: PDF Parsing & Text Extraction | pymupdf, structured JSON output |
-| wt-f2 | 🔲 F2: Public Paper Library | Public browsing + search (needs B3+E1) |
-| wt-f3 | 🔲 F3: Billing (Stripe) | Subscriptions, usage limits (needs B1+B3) |
-| wt-g2 | 🔲 G2: Webhook Delivery System | Event dispatch + HMAC + retries |
+| wt-c2 | ✅ C2: PDF Parsing & Text Extraction | pymupdf, structured JSON output |
+| wt-f2 | ✅ F2: Public Paper Library | Public browsing + search (needs B3+E1) |
+| wt-f3 | ✅ F3: Billing (Stripe) | Subscriptions, usage limits (needs B1+B3) |
+| wt-g2 | ✅ G2: Webhook Delivery System | Event dispatch + HMAC + retries |
 
 > **Notes**: C2 depends on C1 (needs downloaded PDFs). F2 needs E1 (search). F3 needs B1+B3. G2 needs B1+B3. All four are independent of each other.
 
@@ -638,9 +638,9 @@ G3                       — depends on B1 + B3
 ```
 Round 1: A1✅  A2✅  A3✅  B1✅  B3✅  F1✅  (6 worktrees, 全部完成)
 Round 2: B2✅  C1✅  E1✅  G1✅            (4 worktrees, 全部完成)
-Round 3: C2    F2    F3  G2           (4 worktrees, 需 C1+E1)
+Round 3: C2✅  F2✅  F3✅  G2✅       (4 worktrees, 全部完成)
 Round 4: C3    E2    G3              (3 worktrees, 需 C2)
 Round 5: D1    C4    E3              (3 worktrees, 需 C3+E2)
 Round 6: D2    D3                    (2 worktrees, 需 D1)
-                          Total: 22 tasks, 6 rounds (10 done, 12 remaining)
+                          Total: 22 tasks, 6 rounds (14 done, 8 remaining)
 ```

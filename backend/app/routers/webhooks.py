@@ -58,7 +58,7 @@ async def _serialize_webhook(session: AsyncSession, row) -> WebhookOut:
         url=row.url,
         events=row.events or [],
         is_active=row.is_active,
-        secret_preview=preview_secret(row.signing_secret),
+        secret_preview=preview_secret(row.secret_hash),
         created_at=row.created_at,
         deliveries=await _list_deliveries(session, row.id),
     )
@@ -71,7 +71,7 @@ async def _get_webhook_row(session: AsyncSession, webhook_id: UUID, workspace_id
                 Webhook.id,
                 Webhook.url,
                 Webhook.events,
-                Webhook.signing_secret,
+                Webhook.secret_hash,
                 Webhook.is_active,
                 Webhook.created_at,
             )
@@ -105,7 +105,7 @@ async def list_webhooks(
                 Webhook.id,
                 Webhook.url,
                 Webhook.events,
-                Webhook.signing_secret,
+                Webhook.secret_hash,
                 Webhook.is_active,
                 Webhook.created_at,
             )
@@ -136,7 +136,7 @@ async def create_webhook(
         events = normalize_webhook_events(payload.events)
     except ValueError as exc:
         raise APIError(status_code=400, code="webhook_event_invalid", message=str(exc)) from exc
-    signing_secret = payload.secret or generate_webhook_secret()
+    secret_hash = payload.secret or generate_webhook_secret()
     try:
         await session.execute(
             insert(Webhook).values(
@@ -144,7 +144,7 @@ async def create_webhook(
                 workspace_id=current_user.workspace_id,
                 url=str(payload.url),
                 events=events,
-                signing_secret=signing_secret,
+                secret_hash=secret_hash,
                 is_active=True,
             )
         )
@@ -155,7 +155,7 @@ async def create_webhook(
 
     row = await _get_webhook_row(session, webhook_id, current_user.workspace_id)
     serialized = await _serialize_webhook(session, row)
-    return WebhookCreatedOut(**serialized.model_dump(), signing_secret=signing_secret)
+    return WebhookCreatedOut(**serialized.model_dump(), secret_hash=secret_hash)
 
 
 @router.get("/{webhook_id}", response_model=WebhookOut)

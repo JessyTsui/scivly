@@ -42,7 +42,7 @@ class Webhook(Base):
     __table_args__ = (
         UniqueConstraint("workspace_id", "url", name="uq_webhooks_workspace_url"),
         CheckConstraint("length(trim(url)) > 0", name="chk_webhooks_url_nonempty"),
-        CheckConstraint("length(trim(signing_secret)) > 0", name="chk_webhooks_signing_secret_nonempty"),
+        CheckConstraint("length(trim(secret_hash)) > 0", name="chk_webhooks_secret_hash_nonempty"),
         Index("ix_webhooks_workspace_active", "workspace_id", "is_active"),
         Index("ix_webhooks_events_gin", "events", postgresql_using="gin"),
     )
@@ -55,7 +55,7 @@ class Webhook(Base):
     )
     url: Mapped[str] = mapped_column(Text, nullable=False)
     events: Mapped[list[str]] = mapped_column(ARRAY(Text()), nullable=False, server_default=text("'{}'::text[]"))
-    signing_secret: Mapped[str] = mapped_column(Text, nullable=False)
+    secret_hash: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 

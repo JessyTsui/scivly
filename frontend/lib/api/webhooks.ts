@@ -91,7 +91,7 @@ export async function createWebhook(input: WebhookCreateInput) {
     secret_preview: buildSecretPreview(signingSecret),
     created_at: new Date().toISOString(),
     deliveries: buildMockDeliveries(input.events.length > 0 ? input.events : DEFAULT_WEBHOOK_EVENTS),
-    signing_secret: signingSecret,
+    secret_hash: signingSecret,
   };
   const stored: WebhookOut = {
     id: created.id,

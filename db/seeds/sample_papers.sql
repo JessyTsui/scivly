@@ -571,7 +571,7 @@ INSERT INTO webhooks (
   workspace_id,
   url,
   events,
-  signing_secret,
+  secret_hash,
   is_active,
   created_at
 )
@@ -588,7 +588,7 @@ ON CONFLICT (id) DO UPDATE SET
   workspace_id = EXCLUDED.workspace_id,
   url = EXCLUDED.url,
   events = EXCLUDED.events,
-  signing_secret = EXCLUDED.signing_secret,
+  secret_hash = EXCLUDED.secret_hash,
   is_active = EXCLUDED.is_active,
   created_at = EXCLUDED.created_at;
 
