@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 
-import { absoluteUrl, siteConfig } from "@/lib/site-config";
+import { siteConfig } from "@/lib/site-config";
+import { absoluteUrl, resolveSiteUrl } from "@/lib/site-url";
 
 import "./globals.css";
 import { ThemeProvider } from "./providers";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  metadataBase: new URL(resolveSiteUrl()),
   title: {
     default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     title: siteConfig.name,
     description: siteConfig.description,
     type: "website",
-    url: siteConfig.url,
+    url: resolveSiteUrl(),
     siteName: siteConfig.name,
     locale: "en_US",
     images: [

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { absoluteUrl, siteConfig } from "@/lib/site-config";
+import { siteConfig } from "@/lib/site-config";
+import { absoluteUrl } from "@/lib/site-url";
 
 type MetadataOptions = {
   title?: string;
