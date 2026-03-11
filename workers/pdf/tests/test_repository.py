@@ -90,6 +90,7 @@ def test_repository_marks_pdf_failure() -> None:
     assert connection.closed is True
     assert connection.executed[0][1] == ("2503.12345",)
     assert "pdf_status = 'failed'" in connection.executed[0][0]
+    assert "pdf_path = NULL" not in connection.executed[0][0]
 
 
 def test_repository_raises_when_no_paper_record_matches() -> None:

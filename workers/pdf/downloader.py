@@ -264,8 +264,7 @@ class AsyncpgPaperRepository:
             updated = await self._execute_update(
                 """
                 UPDATE papers
-                SET pdf_path = NULL,
-                    pdf_status = 'failed',
+                SET pdf_status = 'failed',
                     updated_at = NOW()
                 WHERE id = $1
                 """,
@@ -275,8 +274,7 @@ class AsyncpgPaperRepository:
             updated = await self._execute_update(
                 """
                 UPDATE papers
-                SET pdf_path = NULL,
-                    pdf_status = 'failed',
+                SET pdf_status = 'failed',
                     updated_at = NOW()
                 WHERE arxiv_id = $1
                 """,
