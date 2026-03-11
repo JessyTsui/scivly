@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.middleware.error_handler import APIError
-from app.models import NotificationChannel, User
+from app.models import NotificationChannel, User, Workspace, WorkspaceMember
 from app.schemas.auth import UserOut
 
 
@@ -31,6 +31,43 @@ async def ensure_user(session: AsyncSession, current_user: UserOut) -> None:
         },
     )
     await session.execute(stmt)
+
+
+async def ensure_workspace(session: AsyncSession, current_user: UserOut) -> None:
+    """Auto-provision user and default workspace if they do not exist yet."""
+    await ensure_user(session, current_user)
+
+    exists = (
+        await session.execute(
+            select(func.count())
+            .select_from(WorkspaceMember)
+            .where(WorkspaceMember.user_id == current_user.id)
+            .where(WorkspaceMember.workspace_id == current_user.workspace_id)
+        )
+    ).scalar_one()
+
+    if exists:
+        return
+
+    # Create the default workspace and membership in one transaction.
+    ws_stmt = insert(Workspace).values(
+        id=current_user.workspace_id,
+        name=f"{current_user.name} Workspace",
+        slug=f"ws-{str(current_user.workspace_id)[:8]}",
+        plan="free",
+        owner_id=current_user.id,
+    )
+    ws_stmt = ws_stmt.on_conflict_do_nothing(index_elements=[Workspace.id])
+    await session.execute(ws_stmt)
+
+    mem_stmt = insert(WorkspaceMember).values(
+        workspace_id=current_user.workspace_id,
+        user_id=current_user.id,
+        role="owner",
+    )
+    mem_stmt = mem_stmt.on_conflict_do_nothing()
+    await session.execute(mem_stmt)
+    await session.commit()
 
 
 async def resolve_notification_channels(

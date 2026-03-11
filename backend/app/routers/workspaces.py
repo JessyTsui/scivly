@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.deps import PaginationParams, get_current_user, get_db, get_pagination_params
 from app.middleware.error_handler import APIError
 from app.models import Workspace, WorkspaceMember
-from app.persistence import ensure_user
+from app.persistence import ensure_user, ensure_workspace
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
 from app.schemas.workspace import WorkspaceCreate, WorkspaceOut, WorkspaceUpdate
@@ -56,6 +56,8 @@ async def list_workspaces(
     current_user: UserOut = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[WorkspaceOut]:
+    await ensure_workspace(session, current_user)
+
     total = (
         await session.execute(
             select(func.count())

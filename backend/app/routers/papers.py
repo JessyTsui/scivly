@@ -156,7 +156,7 @@ async def list_papers(
         needle = f"%{params.query.strip()}%"
         statement = statement.where(Paper.title.ilike(needle) | Paper.abstract.ilike(needle))
     if params.category:
-        statement = statement.where(Paper.categories.any(params.category))
+        statement = statement.where(Paper.categories.any(params.category))  # type: ignore[arg-type]
 
     total = (
         await session.execute(select(func.count()).select_from(statement.subquery()))

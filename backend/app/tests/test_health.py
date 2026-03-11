@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from fastapi.testclient import TestClient
 
 
@@ -19,7 +21,7 @@ def test_ready_returns_ok(client: TestClient) -> None:
     assert payload["checks"]["database"] == "ok"
 
 
-def test_auth_me_returns_authenticated_user(client: TestClient, auth_headers: callable) -> None:
+def test_auth_me_returns_authenticated_user(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
     response = client.get(
         "/auth/me",
         headers=auth_headers(
@@ -59,7 +61,7 @@ def test_unauthenticated_interests_request_returns_401(client: TestClient) -> No
     assert payload["message"] == "Authentication context is missing."
 
 
-def test_authenticated_interests_request_is_workspace_scoped(client: TestClient, auth_headers: callable) -> None:
+def test_authenticated_interests_request_is_workspace_scoped(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
     response = client.get(
         "/interests/topic-profiles",
         headers=auth_headers(workspace_id="22222222-2222-2222-2222-222222222222"),
@@ -93,7 +95,7 @@ def test_invalid_auth_header_returns_standard_error(client: TestClient) -> None:
     assert response.headers["x-request-id"]
 
 
-def test_workspace_is_auto_created_for_new_authenticated_user(client: TestClient, auth_headers: callable) -> None:
+def test_workspace_is_auto_created_for_new_authenticated_user(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
     headers = auth_headers(sub="user_new_signup", name="New User")
 
     me_response = client.get("/auth/me", headers=headers)
@@ -108,7 +110,7 @@ def test_workspace_is_auto_created_for_new_authenticated_user(client: TestClient
     assert workspace_payload["items"][0]["role"] == "owner"
 
 
-def test_workspace_creation_always_returns_owner_role(client: TestClient, auth_headers: callable) -> None:
+def test_workspace_creation_always_returns_owner_role(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
     response = client.post(
         "/workspaces",
         json={"name": "Signals Lab", "slug": "signals-lab", "plan": "pro"},

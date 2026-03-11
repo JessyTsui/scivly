@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any
 from uuid import UUID, uuid4, uuid5
@@ -9,10 +8,11 @@ from uuid import UUID, uuid4, uuid5
 import jwt
 from jwt import InvalidTokenError, PyJWKClient, PyJWKClientError
 
+from typing import Literal, cast
+
 from app.config import Settings
 from app.middleware.error_handler import APIError
 from app.schemas.auth import UserOut
-from app.schemas.workspace import WorkspaceOut
 
 AUTH_NAMESPACE = UUID("9dd27db0-6287-4602-b6ad-d9d4a70a46fa")
 VALID_ROLES = {"owner", "admin", "member"}
@@ -105,13 +105,6 @@ def build_current_user_from_claims(claims: dict[str, Any]) -> UserOut:
     workspace_slug = _string_value(claims.get("workspace_slug")) or _slugify(workspace_name, fallback=subject[-8:].lower())
     role = _resolve_role(claims)
 
-    _ensure_workspace_exists(
-        workspace_id=workspace_id,
-        workspace_name=workspace_name,
-        workspace_slug=workspace_slug,
-        role=role,
-    )
-
     return UserOut(
         id=_resolve_user_id(claims=claims, subject=subject),
         email=_string_value(claims.get("email"))
@@ -120,7 +113,7 @@ def build_current_user_from_claims(claims: dict[str, Any]) -> UserOut:
         name=_display_name(claims, subject),
         avatar_url=_string_value(claims.get("picture")) or _string_value(claims.get("image_url")),
         workspace_id=workspace_id,
-        role=role,
+        role=cast(Literal["owner", "admin", "member"], role),
     )
 
 
@@ -204,28 +197,6 @@ def _resolve_role(claims: dict[str, Any]) -> str:
     if role in VALID_ROLES:
         return role
     return "owner"
-
-
-def _ensure_workspace_exists(
-    *,
-    workspace_id: UUID,
-    workspace_name: str,
-    workspace_slug: str,
-    role: str,
-) -> None:
-    from app.routers.workspaces import WORKSPACES
-
-    if workspace_id in WORKSPACES:
-        return
-
-    WORKSPACES[workspace_id] = WorkspaceOut(
-        id=workspace_id,
-        name=workspace_name,
-        slug=workspace_slug,
-        plan="free",
-        role=role,
-        created_at=datetime.now(timezone.utc),
-    )
 
 
 @lru_cache
