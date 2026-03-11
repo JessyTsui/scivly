@@ -61,7 +61,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/workspace/settings": {
     title: "Settings",
     subtitle:
-      "Manage programmatic access, review key usage, and keep workspace integrations inside clear operational guardrails.",
+      "Manage billing, programmatic access, and the operational guardrails around how the workspace connects to the rest of the platform.",
   },
 };
 

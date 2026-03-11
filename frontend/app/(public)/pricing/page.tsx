@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 
 import { PricingCard } from "@/components/pricing-card";
+import { PricingPlanAction } from "@/components/pricing-plan-action";
 import { SectionHeading } from "@/components/section-heading";
 import { SignupCta } from "@/components/signup-cta";
 import { pricingComparison, pricingFaqs, pricingTiers } from "@/lib/public-site";
@@ -39,17 +40,17 @@ export default function PricingPage() {
                     Recommended
                   </p>
                   <p className="mt-1 text-lg font-medium text-[var(--foreground)]">
-                    Team is the default starting point for most labs and product teams.
+                    Pro is the default starting point for most labs and product teams.
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {[
-                  "Shared workspace and routed digests",
-                  "Operator visibility for retries and delivery",
-                  "API and webhook beta access",
-                  "A clear path to enterprise controls",
+                  "Self-serve Stripe Checkout and billing portal",
+                  "Higher daily paper and token ceilings",
+                  "Usage-aware workspace operations",
+                  "A clean path to enterprise controls later",
                 ].map((item) => (
                   <div key={item} className="flex gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-hover)] px-4 py-3">
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary-subtle)] text-[var(--primary-dark)]">
@@ -64,7 +65,18 @@ export default function PricingPage() {
 
           <div className="mt-12 grid gap-5 xl:grid-cols-3">
             {pricingTiers.map((tier) => (
-              <PricingCard key={tier.name} tier={tier} />
+              <PricingCard
+                key={tier.name}
+                tier={tier}
+                action={
+                  <PricingPlanAction
+                    plan={tier.billingPlan}
+                    href={tier.ctaHref}
+                    label={tier.ctaLabel}
+                    featured={Boolean(tier.featured)}
+                  />
+                }
+              />
             ))}
           </div>
         </div>
@@ -152,7 +164,7 @@ export default function PricingPage() {
 
       <SignupCta
         title="Pick the workspace shape that fits your current research cadence."
-        body="Explorer keeps the barrier low. Team is the default shared setup. Enterprise closes the loop on governance, integrations, and support."
+        body="Free keeps the barrier low. Pro is the default self-serve setup. Enterprise closes the loop on governance, integrations, and support."
       />
     </main>
   );

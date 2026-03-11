@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     api_host: str = "0.0.0.0"
     api_port: int = 8100
+    app_url: str = Field(
+        default="http://localhost:3100",
+        validation_alias=AliasChoices("SCIVLY_APP_URL", "APP_URL", "NEXT_PUBLIC_APP_URL"),
+    )
     database_url: str = Field(
         default="postgresql://localhost:5432/scivly",
         validation_alias=AliasChoices("SCIVLY_DATABASE_URL", "DATABASE_URL"),
@@ -86,6 +90,36 @@ class Settings(BaseSettings):
     api_key_rate_limit_window_seconds: int = 60
     api_key_rate_limit_per_key: int = 60
     api_key_rate_limit_per_workspace: int = 300
+    stripe_secret_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_SECRET_KEY", "STRIPE_SECRET_KEY"),
+    )
+    stripe_webhook_secret: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_WEBHOOK_SECRET", "STRIPE_WEBHOOK_SECRET"),
+    )
+    stripe_pro_price_id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_PRO_PRICE_ID", "STRIPE_PRO_PRICE_ID"),
+    )
+    stripe_checkout_success_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_CHECKOUT_SUCCESS_URL", "STRIPE_CHECKOUT_SUCCESS_URL"),
+    )
+    stripe_checkout_cancel_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_CHECKOUT_CANCEL_URL", "STRIPE_CHECKOUT_CANCEL_URL"),
+    )
+    stripe_portal_return_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SCIVLY_STRIPE_PORTAL_RETURN_URL", "STRIPE_PORTAL_RETURN_URL"),
+    )
+    billing_free_papers_per_day: int = 10
+    billing_free_llm_tokens_per_month: int = 50_000
+    billing_free_digests_per_month: int = 10
+    billing_pro_papers_per_day: int = 250
+    billing_pro_llm_tokens_per_month: int = 1_000_000
+    billing_pro_digests_per_month: int = 200
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
@@ -100,6 +134,21 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @field_validator(
+        "app_url",
+        "stripe_checkout_success_url",
+        "stripe_checkout_cancel_url",
+        "stripe_portal_return_url",
+        mode="before",
+    )
+    @classmethod
+    def normalize_urls(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        stripped = value.strip()
+        return stripped.rstrip("/") if stripped else None
 
     @property
     def is_development(self) -> bool:

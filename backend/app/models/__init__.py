@@ -22,7 +22,7 @@ class Vector(UserDefinedType):
 
 # Import models after Base/Vector so dependent modules can import the shared types.
 from .auth import AuthorWatchlist, NotificationChannel, TopicProfile, User, Workspace, WorkspaceMember  # noqa: E402
-from .billing import ApiKey, UsageRecord, Webhook, WebhookDelivery  # noqa: E402
+from .billing import ApiKey, BillingEvent, UsageRecord, Webhook, WebhookDelivery  # noqa: E402
 from .chat import ChatMessage, ChatSession  # noqa: E402
 from .digests import Delivery, Digest, DigestSchedule  # noqa: E402
 from .papers import Paper, PaperEnrichment, PaperScore  # noqa: E402
@@ -32,6 +32,7 @@ __all__ = [
     "ApiKey",
     "AuthorWatchlist",
     "Base",
+    "BillingEvent",
     "ChatMessage",
     "ChatSession",
     "Delivery",

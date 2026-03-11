@@ -83,11 +83,37 @@ class WebhookDelivery(Base):
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 
+class BillingEvent(Base):
+    __tablename__ = "billing_events"
+    __table_args__ = (
+        UniqueConstraint("stripe_event_id", name="uq_billing_events_stripe_event_id"),
+        CheckConstraint("length(trim(event_type)) > 0", name="chk_billing_events_event_type_nonempty"),
+        Index("ix_billing_events_workspace_created_at", text("workspace_id, created_at DESC")),
+        Index("ix_billing_events_customer_id", "stripe_customer_id"),
+        Index("ix_billing_events_subscription_id", "stripe_subscription_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    workspace_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="SET NULL"),
+    )
+    stripe_event_id: Mapped[str] = mapped_column(Text, nullable=False)
+    event_type: Mapped[str] = mapped_column(Text, nullable=False)
+    stripe_customer_id: Mapped[str | None] = mapped_column(Text)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(Text)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    processed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+
+
 class UsageRecord(Base):
     __tablename__ = "usage_records"
     __table_args__ = (
         CheckConstraint(
-            "record_type IN ('api_call', 'llm_token', 'pdf_download', 'delivery')",
+            "record_type IN ("
+            "'api_call', 'llm_token', 'pdf_download', 'delivery', 'paper_process', 'digest_sent'"
+            ")",
             name="chk_usage_records_type",
         ),
         CheckConstraint("quantity > 0", name="chk_usage_records_quantity_positive"),

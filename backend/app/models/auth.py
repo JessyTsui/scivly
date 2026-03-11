@@ -35,7 +35,26 @@ class Workspace(Base):
         UniqueConstraint("slug", name="uq_workspaces_slug"),
         CheckConstraint("length(trim(name)) > 0", name="chk_workspaces_name_nonempty"),
         CheckConstraint("slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'", name="chk_workspaces_slug_format"),
+        CheckConstraint(
+            "subscription_status IN ("
+            "'free', 'trialing', 'active', 'past_due', 'canceled', "
+            "'unpaid', 'incomplete', 'incomplete_expired', 'paused'"
+            ")",
+            name="chk_workspaces_subscription_status",
+        ),
         Index("ix_workspaces_owner_id", "owner_id"),
+        Index(
+            "uq_workspaces_stripe_customer_id",
+            "stripe_customer_id",
+            unique=True,
+            postgresql_where=text("stripe_customer_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_workspaces_stripe_subscription_id",
+            "stripe_subscription_id",
+            unique=True,
+            postgresql_where=text("stripe_subscription_id IS NOT NULL"),
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
@@ -47,6 +66,12 @@ class Workspace(Base):
         nullable=False,
     )
     plan: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'free'"))
+    stripe_customer_id: Mapped[str | None] = mapped_column(Text)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(Text)
+    stripe_price_id: Mapped[str | None] = mapped_column(Text)
+    subscription_status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'free'"))
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    current_period_end: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
 
 

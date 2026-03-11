@@ -143,6 +143,7 @@ export const architectureSurfaces: MarketingCard[] = [
 ];
 
 export type PricingTier = {
+  billingPlan: "free" | "pro" | "enterprise";
   name: string;
   price: string;
   cadence: string;
@@ -156,37 +157,40 @@ export type PricingTier = {
 
 export const pricingTiers: PricingTier[] = [
   {
-    name: "Explorer",
+    billingPlan: "free",
+    name: "Free",
     price: "$0",
-    cadence: "forever",
-    summary: "For solo researchers validating whether continuous paper intelligence fits their workflow.",
-    highlight: "Best for trying the product shape",
+    cadence: "per workspace / month",
+    summary: "For early validation when one workspace needs a narrow daily budget and a direct way to see whether the workflow sticks.",
+    highlight: "Best for initial validation",
     ctaLabel: "Start free",
     ctaHref: "/signup",
     features: [
-      "3 active monitors",
-      "Daily digest preview",
+      "10 processed papers per day",
+      "50k LLM tokens per month",
+      "10 digests per month",
       "Workspace feed and paper detail",
-      "Public docs and starter guidance",
     ],
   },
   {
-    name: "Team",
+    billingPlan: "pro",
+    name: "Pro",
     price: "$49",
     cadence: "per workspace / month",
-    summary: "For product teams and labs that need shared digests, routing, and a real research operating surface.",
+    summary: "For teams that want Stripe-backed self-serve billing, materially higher usage ceilings, and a workspace that can run every day without babysitting.",
     highlight: "Recommended for most teams",
     featured: true,
-    ctaLabel: "Create team workspace",
+    ctaLabel: "Upgrade to Pro",
     ctaHref: "/signup",
     features: [
-      "Unlimited monitors",
-      "Scheduled digests and delivery channels",
-      "Shared notes, routing, and QA context",
-      "Usage visibility across the workspace",
+      "250 processed papers per day",
+      "1M LLM tokens per month",
+      "200 digests per month",
+      "Stripe billing portal and usage visibility",
     ],
   },
   {
+    billingPlan: "enterprise",
     name: "Enterprise",
     price: "Custom",
     cadence: "deployment + support",
@@ -205,24 +209,24 @@ export const pricingTiers: PricingTier[] = [
 
 export const pricingComparison = [
   {
-    label: "Paper monitors",
-    values: ["Up to 3", "Unlimited", "Unlimited + policy controls"],
+    label: "Processed papers",
+    values: ["10 / day", "250 / day", "Custom policy"],
   },
   {
-    label: "Digests and delivery",
-    values: ["Manual preview", "Scheduled digests", "Custom channels + SLAs"],
+    label: "LLM tokens",
+    values: ["50k / month", "1M / month", "Custom budget"],
   },
   {
-    label: "Team collaboration",
-    values: ["Solo workspace", "Shared workspace", "Multi-workspace governance"],
+    label: "Digests",
+    values: ["10 / month", "200 / month", "Custom delivery policy"],
   },
   {
-    label: "Developer access",
-    values: ["Docs only", "API and webhook beta", "Custom integration support"],
+    label: "Billing flow",
+    values: ["No card required", "Stripe Checkout + portal", "Contracted billing"],
   },
   {
     label: "Operator visibility",
-    values: ["Basic feed", "Usage and retry insight", "Admin controls and reporting"],
+    values: ["Basic workspace view", "Usage limits and billing state", "Admin controls and reporting"],
   },
 ];
 
@@ -230,12 +234,12 @@ export const pricingFaqs = [
   {
     question: "Is there a free tier?",
     answer:
-      "Yes. Explorer is intended for validating the workflow shape before a team commits to shared monitoring and delivery.",
+      "Yes. The Free plan is intentionally constrained so a workspace can validate the workflow before usage grows into a real operating surface.",
   },
   {
     question: "Can I switch plans later?",
     answer:
-      "Yes. Pricing is designed so a workspace can start with a lightweight setup and move to shared delivery when the team is ready.",
+      "Yes. Workspaces can start free, move to Pro through Stripe Checkout, and then use the billing portal for the ongoing subscription lifecycle.",
   },
   {
     question: "Does Enterprise mean self-hosted?",

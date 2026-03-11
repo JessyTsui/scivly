@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
@@ -6,9 +7,11 @@ import type { PricingTier } from "@/lib/public-site";
 export function PricingCard({
   tier,
   compact = false,
+  action,
 }: {
   tier: PricingTier;
   compact?: boolean;
+  action?: ReactNode;
 }) {
   return (
     <div
@@ -57,9 +60,11 @@ export function PricingCard({
       </ul>
 
       <div className="mt-8">
-        <Link href={tier.ctaHref} className={tier.featured ? "btn-primary" : "btn-secondary"}>
-          {tier.ctaLabel}
-        </Link>
+        {action ?? (
+          <Link href={tier.ctaHref} className={tier.featured ? "btn-primary" : "btn-secondary"}>
+            {tier.ctaLabel}
+          </Link>
+        )}
       </div>
     </div>
   );

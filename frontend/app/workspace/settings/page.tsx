@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BillingSettingsPanel } from "@/components/workspace/billing-settings-panel";
 import {
   buildApiKeyCurlExample,
   createApiKey,
@@ -263,6 +264,8 @@ export default function WorkspaceSettingsPage() {
 
   return (
     <div className="space-y-6">
+      <BillingSettingsPanel />
+
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
         <Card className="overflow-hidden">
           <CardHeader className="relative">

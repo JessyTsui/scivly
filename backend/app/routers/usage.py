@@ -7,9 +7,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.billing import get_usage_limit_states, has_soft_limit_violation
+from app.config import get_settings
 from app.deps import get_current_user, get_db
 from app.middleware.error_handler import APIError
-from app.models import UsageRecord
+from app.models import UsageRecord, Workspace
+from app.persistence import ensure_workspace
 from app.schemas.auth import UserOut
 from app.schemas.common import UsageBucketOut, UsageStatsOut
 
@@ -30,6 +33,7 @@ async def get_usage(
         )
 
     target_workspace = workspace_id or current_user.workspace_id
+    await ensure_workspace(session, current_user)
     rows = (
         await session.execute(
             select(
@@ -54,6 +58,16 @@ async def get_usage(
         )
     ).one()
 
+    workspace_plan = (
+        await session.execute(select(Workspace.plan).where(Workspace.id == target_workspace))
+    ).scalar_one_or_none()
+    usage_limits = await get_usage_limit_states(
+        session,
+        workspace_id=target_workspace,
+        plan=workspace_plan,
+        settings=get_settings(),
+    )
+
     buckets = [
         UsageBucketOut(
             record_type=row.record_type,
@@ -70,5 +84,5 @@ async def get_usage(
         period_end=period_row.period_end or datetime.now(timezone.utc),
         total_cost=round(sum(bucket.total_cost for bucket in buckets), 6),
         by_type=buckets,
-        overage_warning=False,
+        overage_warning=has_soft_limit_violation(usage_limits),
     )

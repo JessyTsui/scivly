@@ -2,6 +2,8 @@ export type ApiDateString = string;
 
 export type WorkspaceRole = "owner" | "admin" | "member";
 export type WorkspacePlan = "Personal" | "Research Pro" | "Lab";
+export type BillingPlan = "free" | "pro" | "team" | "enterprise";
+export type BillingUsageMetric = "papers_processed" | "llm_tokens" | "digests_sent";
 export type NotificationChannelType = "email" | "telegram" | "discord" | "webhook";
 export type DigestStatus = "draft" | "sent" | "failed";
 export type PaperDecision =
@@ -54,9 +56,38 @@ export interface BackendWorkspaceOut {
   id: string;
   name: string;
   slug: string;
-  plan: "free" | "pro" | "team" | "enterprise";
+  plan: BillingPlan;
   role: WorkspaceRole;
   created_at: ApiDateString;
+}
+
+export interface BillingUsageLimitOut {
+  key: BillingUsageMetric;
+  label: string;
+  window: "day" | "month";
+  used: number;
+  limit?: number | null;
+  remaining?: number | null;
+  soft_limited: boolean;
+}
+
+export interface BillingSubscriptionOut {
+  workspace_id: string;
+  plan: BillingPlan;
+  subscription_status: string;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  stripe_price_id?: string | null;
+  cancel_at_period_end: boolean;
+  current_period_end?: ApiDateString | null;
+  portal_available: boolean;
+  usage_limits: BillingUsageLimitOut[];
+  overage_warning: boolean;
+}
+
+export interface BillingSessionOut {
+  id: string;
+  url: string;
 }
 
 export interface ApiKeyOut {

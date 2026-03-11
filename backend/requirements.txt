@@ -9,3 +9,4 @@ asyncpg>=0.30
 pytest>=8.3
 httpx>=0.28
 PyJWT[crypto]>=2.10
+stripe>=12.0

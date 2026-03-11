@@ -68,7 +68,7 @@ class ApiKeyCreatedOut(ApiKeyOut):
 
 
 class UsageBucketOut(APIModel):
-    record_type: Literal["api_call", "llm_token", "pdf_download", "delivery"]
+    record_type: Literal["api_call", "llm_token", "pdf_download", "delivery", "paper_process", "digest_sent"]
     quantity: float
     unit_cost: float
     total_cost: float

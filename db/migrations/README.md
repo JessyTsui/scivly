@@ -11,6 +11,9 @@ Apply migrations in filename order:
 3. `003_author_watchlist_created_at.sql`
 4. `004_chat_sessions_title.sql`
 5. `005_api_keys_is_active.sql`
+6. `006_paper_pdf_tracking.sql`
+7. `007_billing_stripe.sql`
+8. `008_webhooks_secret_hash.sql`
 
 The first migration creates the core relational schema and enables `pgcrypto` for
 `gen_random_uuid()`. The second migration enables `pgvector` and adds vector columns to
@@ -46,6 +49,9 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/002_pgvector.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/003_author_watchlist_created_at.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/004_chat_sessions_title.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/005_api_keys_is_active.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/006_paper_pdf_tracking.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/007_billing_stripe.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/008_webhooks_secret_hash.sql
 ```
 
 ## Load Demo Seeds

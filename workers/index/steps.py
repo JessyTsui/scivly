@@ -14,9 +14,6 @@ from workers.common.task import TaskType
 
 from .embedder import EmbeddingProvider, build_paper_embedding_text, create_embedding_provider, vector_to_pgvector
 
-DEFAULT_POSTGRES_USER = "postgres"
-
-
 @dataclass(frozen=True)
 class IndexablePaper:
     paper_id: UUID
@@ -270,10 +267,4 @@ def _normalize_database_url(database_url: str) -> str:
     if parsed.scheme not in {"postgres", "postgresql"}:
         return database_url
 
-    if parsed.username:
-        return database_url
-
-    host = parsed.hostname or "localhost"
-    port = f":{parsed.port}" if parsed.port else ""
-    netloc = f"{DEFAULT_POSTGRES_USER}@{host}{port}"
-    return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, parsed.query, parsed.fragment))
