@@ -3,6 +3,7 @@
 This directory is reserved for Scivly ingestion, enrichment, and delivery workers.
 
 - `arxiv/` for source sync and paper ingestion
+- `pdf/` for PDF download and full-text fetch tracking
 - `digest/` for digest assembly and delivery
 - `common/` for shared pipeline infrastructure
 

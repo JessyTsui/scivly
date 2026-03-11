@@ -87,7 +87,15 @@ class PipelineStep(ABC):
         if cached is not None:
             return cached
 
-        execution_payload = dict(payload or task.payload)
+        execution_payload = dict(task.payload)
+        if payload is not None:
+            execution_payload.update(payload)
+        execution_payload.setdefault("task_id", task.task_id)
+        execution_payload.setdefault("task_type", normalize_task_type(task.task_type))
+        execution_payload.setdefault("workspace_id", task.workspace_id)
+        execution_payload.setdefault("idempotency_key", task.idempotency_key)
+        if task.paper_id is not None:
+            execution_payload.setdefault("paper_id", task.paper_id)
         last_error = "Unknown pipeline error"
 
         for attempt in range(1, self.max_attempts + 1):

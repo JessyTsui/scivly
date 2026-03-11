@@ -18,7 +18,9 @@ class Paper(Base):
         CheckConstraint("version > 0", name="chk_papers_version_positive"),
         CheckConstraint("length(trim(title)) > 0", name="chk_papers_title_nonempty"),
         CheckConstraint("length(trim(abstract)) > 0", name="chk_papers_abstract_nonempty"),
+        CheckConstraint("pdf_status IN ('missing', 'stored', 'failed')", name="chk_papers_pdf_status"),
         Index("ix_papers_primary_category", "primary_category"),
+        Index("ix_papers_pdf_status", "pdf_status"),
         Index("ix_papers_published_at", text("published_at DESC")),
         Index("ix_papers_updated_at", text("updated_at DESC")),
         Index("ix_papers_categories_gin", "categories", postgresql_using="gin"),
@@ -50,6 +52,8 @@ class Paper(Base):
     doi: Mapped[str | None] = mapped_column(Text)
     published_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    pdf_path: Mapped[str | None] = mapped_column(Text)
+    pdf_status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'missing'"))
     raw_metadata: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     embedding: Mapped[Any | None] = mapped_column(Vector(1536), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
