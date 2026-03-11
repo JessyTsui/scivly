@@ -13,6 +13,7 @@ import {
 import type { DateWindow, FeedSortOption } from "@/lib/api/types";
 import { RESEARCH_CATEGORIES } from "@/lib/api/types";
 import { listPapers } from "@/lib/api/papers";
+import { useScivlySession } from "@/lib/auth/scivly-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -58,15 +59,23 @@ const sortLabels: Record<FeedSortOption, string> = {
 };
 
 export default function WorkspaceFeedPage() {
+  const session = useScivlySession();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"all" | (typeof RESEARCH_CATEGORIES)[number]>("all");
   const [minScore, setMinScore] = useState("55");
   const [dateWindow, setDateWindow] = useState<DateWindow>("7d");
   const [sort, setSort] = useState<FeedSortOption>("score_desc");
   const deferredSearch = useDeferredValue(search);
+  const queriesEnabled =
+    session.isLoaded &&
+    session.isSignedIn &&
+    !session.isSyncing &&
+    !session.error &&
+    Boolean(session.workspace);
 
   const paperQuery = useQuery({
     queryKey: ["papers", deferredSearch, category, minScore, dateWindow, sort],
+    enabled: queriesEnabled,
     queryFn: () =>
       listPapers({
         search: deferredSearch,
@@ -96,8 +105,8 @@ export default function WorkspaceFeedPage() {
               Research triage should feel like a clear queue, not a pile of tabs.
             </CardTitle>
             <p className="max-w-3xl text-sm leading-7 text-[var(--foreground-muted)] sm:text-base">
-              This mock feed mirrors the future backend schema: scored papers, explainable
-              reasons, and enough metadata to decide what deserves a digest or deeper review.
+              Review the scored queue coming from the backend API: explainable reasons, enrichment
+              metadata, and enough context to decide what deserves digest or deeper follow-up.
             </p>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-3">
@@ -246,10 +255,24 @@ export default function WorkspaceFeedPage() {
       </Card>
 
       <div className="space-y-4">
-        {paperQuery.isLoading ? (
+        {!queriesEnabled ? (
           <Card>
             <CardContent className="pt-6 text-sm text-[var(--foreground-muted)]">
-              Loading mock papers...
+              Syncing authenticated workspace context with the backend...
+            </CardContent>
+          </Card>
+        ) : paperQuery.isError ? (
+          <Card>
+            <CardContent className="pt-6 text-sm text-rose-500">
+              {paperQuery.error instanceof Error
+                ? paperQuery.error.message
+                : "Failed to load papers from the backend API."}
+            </CardContent>
+          </Card>
+        ) : paperQuery.isLoading ? (
+          <Card>
+            <CardContent className="pt-6 text-sm text-[var(--foreground-muted)]">
+              Loading papers from the backend API...
             </CardContent>
           </Card>
         ) : papers.length ? (

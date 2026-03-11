@@ -4,6 +4,7 @@ import type {
   AuthorWatchlistOut,
   NotificationChannelOut,
   NotificationChannelUpdate,
+  PaginatedResponse,
   TopicProfileCreate,
   TopicProfileOut,
 } from "@/lib/api/types";
@@ -14,8 +15,24 @@ import {
   mockProfiles,
 } from "@/lib/mock/profiles";
 
+type BackendTopicProfile = Omit<TopicProfileOut, "description" | "match_count_24h">;
+
 function clone<T>(value: T): T {
   return structuredClone(value);
+}
+
+function formatProfileDescription(profile: Pick<TopicProfileOut, "categories" | "keywords">) {
+  const keywordLabel = profile.keywords.slice(0, 3).join(", ");
+  const categoryLabel = profile.categories.slice(0, 2).join(", ");
+  return `Tracks ${keywordLabel || "priority topics"} across ${categoryLabel || "selected categories"}.`;
+}
+
+function normalizeProfile(profile: BackendTopicProfile): TopicProfileOut {
+  return {
+    ...profile,
+    description: formatProfileDescription(profile),
+    match_count_24h: 0,
+  };
 }
 
 let profileStore = clone(mockProfiles);
@@ -24,7 +41,8 @@ let channelStore = clone(mockNotificationChannels);
 
 export async function getProfiles() {
   if (!isMockApiEnabled()) {
-    return apiRequest<TopicProfileOut[]>("/interests/profiles");
+    const response = await apiRequest<PaginatedResponse<BackendTopicProfile>>("/interests/topic-profiles");
+    return response.items.map(normalizeProfile);
   }
 
   return clone(profileStore);
@@ -32,10 +50,16 @@ export async function getProfiles() {
 
 export async function createProfile(input: TopicProfileCreate) {
   if (!isMockApiEnabled()) {
-    return apiRequest<TopicProfileOut>("/interests/profiles", {
+    const profile = await apiRequest<BackendTopicProfile>("/interests/topic-profiles", {
       method: "POST",
-      body: input,
+      body: {
+        name: input.name,
+        categories: input.categories,
+        keywords: input.keywords,
+      },
     });
+
+    return normalizeProfile(profile);
   }
 
   const profile: TopicProfileOut = {
@@ -56,7 +80,8 @@ export async function createProfile(input: TopicProfileCreate) {
 
 export async function getAuthorWatchlist() {
   if (!isMockApiEnabled()) {
-    return apiRequest<AuthorWatchlistOut[]>("/interests/authors");
+    const response = await apiRequest<PaginatedResponse<AuthorWatchlistOut>>("/interests/author-watchlists");
+    return response.items;
   }
 
   return clone(authorStore);
@@ -64,7 +89,7 @@ export async function getAuthorWatchlist() {
 
 export async function addAuthorWatch(input: AuthorWatchCreate) {
   if (!isMockApiEnabled()) {
-    return apiRequest<AuthorWatchlistOut>("/interests/authors", {
+    return apiRequest<AuthorWatchlistOut>("/interests/author-watchlists", {
       method: "POST",
       body: input,
     });
@@ -83,7 +108,7 @@ export async function addAuthorWatch(input: AuthorWatchCreate) {
 
 export async function removeAuthorWatch(id: string) {
   if (!isMockApiEnabled()) {
-    await apiRequest(`/interests/authors/${id}`, { method: "DELETE" });
+    await apiRequest(`/interests/author-watchlists/${id}`, { method: "DELETE" });
     return;
   }
 

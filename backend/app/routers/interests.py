@@ -9,13 +9,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import PaginationParams, get_current_user, get_db, get_pagination_params
 from app.middleware.error_handler import APIError
-from app.models import AuthorWatchlist, TopicProfile
+from app.models import AuthorWatchlist, NotificationChannel, TopicProfile
 from app.schemas.auth import UserOut
 from app.schemas.common import PaginatedResponse
 from app.schemas.interest import (
     AuthorWatchlistCreate,
     AuthorWatchlistOut,
     AuthorWatchlistUpdate,
+    NotificationChannelOut,
+    NotificationChannelUpdate,
     TopicProfileCreate,
     TopicProfileOut,
     TopicProfileUpdate,
@@ -53,6 +55,51 @@ def _serialize_watchlist(row) -> AuthorWatchlistOut:
         arxiv_author_id=row.arxiv_author_id,
         notes=row.notes,
         created_at=row.created_at,
+    )
+
+
+def _normalize_channel_config(raw_config: object) -> dict[str, str]:
+    if not isinstance(raw_config, dict):
+        return {}
+
+    normalized: dict[str, str] = {}
+    for key, value in raw_config.items():
+        if isinstance(value, str):
+            normalized[key] = value
+        elif isinstance(value, (int, float, bool)):
+            normalized[key] = str(value).lower() if isinstance(value, bool) else str(value)
+
+    target = (
+        normalized.get("target")
+        or normalized.get("address")
+        or normalized.get("webhook_url")
+        or normalized.get("endpoint")
+        or normalized.get("channel")
+    )
+    if target:
+        normalized["target"] = target
+
+    return normalized
+
+
+def _default_channel_label(channel_type: str) -> str:
+    return {
+        "email": "Email digest",
+        "telegram": "Telegram alert",
+        "discord": "Discord digest",
+        "webhook": "Webhook sync",
+    }.get(channel_type, channel_type.replace("_", " ").title())
+
+
+def _serialize_channel(row) -> NotificationChannelOut:
+    config = _normalize_channel_config(row.config)
+    return NotificationChannelOut(
+        id=row.id,
+        workspace_id=row.workspace_id,
+        channel_type=row.channel_type,
+        label=config.get("label") or _default_channel_label(row.channel_type),
+        config=config,
+        is_active=row.is_active,
     )
 
 
@@ -94,6 +141,29 @@ async def _get_watchlist_row(session: AsyncSession, watchlist_id: UUID, workspac
     ).one_or_none()
     if row is None:
         raise APIError(status_code=404, code="author_watchlist_not_found", message="Author watchlist not found.")
+    return row
+
+
+async def _get_channel_row(session: AsyncSession, channel_id: UUID, workspace_id: UUID):
+    row = (
+        await session.execute(
+            select(
+                NotificationChannel.id,
+                NotificationChannel.workspace_id,
+                NotificationChannel.channel_type,
+                NotificationChannel.config,
+                NotificationChannel.is_active,
+            )
+            .where(NotificationChannel.id == channel_id)
+            .where(NotificationChannel.workspace_id == workspace_id)
+        )
+    ).one_or_none()
+    if row is None:
+        raise APIError(
+            status_code=404,
+            code="notification_channel_not_found",
+            message="Notification channel not found.",
+        )
     return row
 
 
@@ -323,3 +393,60 @@ async def delete_author_watchlist(
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/channels", response_model=list[NotificationChannelOut])
+async def list_notification_channels(
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> list[NotificationChannelOut]:
+    rows = (
+        await session.execute(
+            select(
+                NotificationChannel.id,
+                NotificationChannel.workspace_id,
+                NotificationChannel.channel_type,
+                NotificationChannel.config,
+                NotificationChannel.is_active,
+            )
+            .where(NotificationChannel.workspace_id == current_user.workspace_id)
+            .order_by(NotificationChannel.is_active.desc(), NotificationChannel.channel_type.asc())
+        )
+    ).all()
+
+    return [_serialize_channel(row) for row in rows]
+
+
+@router.patch("/channels/{channel_id}", response_model=NotificationChannelOut)
+async def update_notification_channel(
+    channel_id: UUID,
+    payload: NotificationChannelUpdate,
+    current_user: UserOut = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> NotificationChannelOut:
+    existing = await _get_channel_row(session, channel_id, current_user.workspace_id)
+    updates = payload.model_dump(exclude_none=True)
+
+    values: dict[str, object] = {}
+    if "is_active" in updates:
+        values["is_active"] = updates["is_active"]
+
+    next_config = dict(existing.config or {})
+    if "config" in updates:
+        next_config.update(updates["config"])
+    if "label" in updates:
+        next_config["label"] = updates["label"]
+    if next_config != dict(existing.config or {}):
+        values["config"] = next_config
+
+    if values:
+        await session.execute(
+            update(NotificationChannel)
+            .where(NotificationChannel.id == channel_id)
+            .where(NotificationChannel.workspace_id == current_user.workspace_id)
+            .values(**values)
+        )
+        await session.commit()
+
+    row = await _get_channel_row(session, channel_id, current_user.workspace_id)
+    return _serialize_channel(row)

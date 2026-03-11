@@ -49,3 +49,18 @@ class AuthorWatchlistOut(APIModel):
     arxiv_author_id: str | None = None
     notes: str | None = None
     created_at: datetime
+
+
+class NotificationChannelOut(APIModel):
+    id: UUID
+    workspace_id: UUID
+    channel_type: str
+    label: str
+    config: dict[str, str]
+    is_active: bool = True
+
+
+class NotificationChannelUpdate(APIModel):
+    label: str | None = Field(default=None, min_length=2, max_length=120)
+    config: dict[str, str] | None = None
+    is_active: bool | None = None

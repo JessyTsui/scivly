@@ -58,6 +58,11 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     subtitle:
       "Ask follow-up questions against paper context, prior digest notes, and explainable mock evidence.",
   },
+  "/workspace/settings": {
+    title: "Settings",
+    subtitle:
+      "Manage programmatic access, review key usage, and keep workspace integrations inside clear operational guardrails.",
+  },
 };
 
 const navItems = [
@@ -65,7 +70,7 @@ const navItems = [
   { href: "/workspace/interests", label: "Interests", icon: BookOpenText },
   { href: "/workspace/digests", label: "Digests", icon: Newspaper },
   { href: "/workspace/qa", label: "Q&A", icon: FileQuestion },
-  { href: "/workspace/interests#settings", label: "Settings", icon: Settings2 },
+  { href: "/workspace/settings", label: "Settings", icon: Settings2 },
 ];
 
 function isActive(pathname: string, href: string) {

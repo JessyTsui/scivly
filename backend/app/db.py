@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.config import get_settings
 
-DEFAULT_POSTGRES_USER = "postgres"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIR = REPO_ROOT / "db" / "migrations"
 SEEDS_DIR = REPO_ROOT / "db" / "seeds"
@@ -31,9 +30,6 @@ def normalize_database_url(database_url: str, *, driver: str | None = None) -> s
         target_driver = "postgresql+asyncpg"
     elif "+" in url.drivername:
         target_driver = url.drivername
-
-    if url.username is None:
-        url = url.set(username=DEFAULT_POSTGRES_USER)
 
     return url.set(drivername=target_driver).render_as_string(hide_password=False)
 

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import re
 from functools import lru_cache
 from typing import Any
-from uuid import UUID, uuid4, uuid5
+from uuid import UUID, uuid5
 
 import jwt
 from jwt import InvalidTokenError, PyJWKClient, PyJWKClientError
@@ -101,8 +100,6 @@ def verify_session_token(token: str, settings: Settings) -> dict[str, Any]:
 def build_current_user_from_claims(claims: dict[str, Any]) -> UserOut:
     subject = str(claims["sub"])
     workspace_id = _resolve_workspace_id(claims=claims, subject=subject)
-    workspace_name = _string_value(claims.get("workspace_name")) or f"{_display_name(claims, subject)} Workspace"
-    workspace_slug = _string_value(claims.get("workspace_slug")) or _slugify(workspace_name, fallback=subject[-8:].lower())
     role = _resolve_role(claims)
 
     return UserOut(
@@ -219,14 +216,3 @@ def _parse_uuid(raw_value: str | None) -> UUID | None:
         return UUID(raw_value)
     except ValueError:
         return None
-
-
-def _slugify(value: str, fallback: str | None = None) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-    if slug:
-        return slug[:80]
-
-    if fallback:
-        return fallback[:80]
-
-    return str(uuid4())

@@ -59,6 +59,9 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3100"],
         validation_alias=AliasChoices("SCIVLY_AUTH_AUTHORIZED_PARTIES", "AUTH_AUTHORIZED_PARTIES"),
     )
+    api_key_rate_limit_window_seconds: int = 60
+    api_key_rate_limit_per_key: int = 60
+    api_key_rate_limit_per_workspace: int = 300
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

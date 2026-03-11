@@ -2,6 +2,8 @@ from collections.abc import Callable
 
 from fastapi.testclient import TestClient
 
+DEMO_WORKSPACE_ID = "00000000-0000-0000-0000-000000000201"
+
 
 def test_health_returns_ok(client: TestClient) -> None:
     response = client.get("/health")
@@ -64,13 +66,13 @@ def test_unauthenticated_interests_request_returns_401(client: TestClient) -> No
 def test_authenticated_interests_request_is_workspace_scoped(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
     response = client.get(
         "/interests/topic-profiles",
-        headers=auth_headers(workspace_id="22222222-2222-2222-2222-222222222222"),
+        headers=auth_headers(workspace_id=DEMO_WORKSPACE_ID),
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["total"] == 2
-    assert {item["workspace_id"] for item in payload["items"]} == {"22222222-2222-2222-2222-222222222222"}
+    assert {item["workspace_id"] for item in payload["items"]} == {DEMO_WORKSPACE_ID}
 
 
 def test_invalid_token_uses_standard_error_shape(client: TestClient) -> None:
@@ -111,17 +113,18 @@ def test_workspace_is_auto_created_for_new_authenticated_user(client: TestClient
 
 
 def test_workspace_creation_always_returns_owner_role(client: TestClient, auth_headers: Callable[..., dict[str, str]]) -> None:
+    headers = auth_headers(workspace_id="33333333-3333-3333-3333-333333333333", role="admin")
     response = client.post(
         "/workspaces",
         json={"name": "Signals Lab", "slug": "signals-lab", "plan": "pro"},
-        headers=auth_headers(workspace_id="33333333-3333-3333-3333-333333333333", role="admin"),
+        headers=headers,
     )
 
     assert response.status_code == 201
     payload = response.json()
     assert payload["role"] == "owner"
 
-    follow_up = client.get(f"/workspaces/{payload['id']}")
+    follow_up = client.get(f"/workspaces/{payload['id']}", headers=headers)
     assert follow_up.status_code == 200
     assert follow_up.json()["slug"] == "signals-lab"
 
@@ -133,19 +136,29 @@ def test_openapi_version_matches_health_version(client: TestClient) -> None:
     assert response.json()["info"]["version"] == "0.1.0"
 
 
-def test_delete_workspace_removes_it_from_follow_up_reads(client: TestClient) -> None:
-    workspace_id = "00000000-0000-0000-0000-000000000201"
+def test_delete_workspace_removes_it_from_follow_up_reads(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
+    workspace_id = DEMO_WORKSPACE_ID
+    headers = auth_headers(workspace_id=workspace_id)
 
-    delete_response = client.delete(f"/workspaces/{workspace_id}")
+    bootstrap_response = client.get("/workspaces", headers=headers)
+    assert bootstrap_response.status_code == 200
+
+    delete_response = client.delete(f"/workspaces/{workspace_id}", headers=headers)
     assert delete_response.status_code == 204
 
-    get_response = client.get(f"/workspaces/{workspace_id}")
+    get_response = client.get(f"/workspaces/{workspace_id}", headers=headers)
     assert get_response.status_code == 404
     assert get_response.json()["error"] == "workspace_not_found"
 
 
-def test_list_workspaces_reads_seeded_rows(client: TestClient) -> None:
-    response = client.get("/workspaces")
+def test_list_workspaces_reads_seeded_rows(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
+    response = client.get("/workspaces", headers=auth_headers(workspace_id=DEMO_WORKSPACE_ID))
 
     assert response.status_code == 200
     payload = response.json()
@@ -154,8 +167,12 @@ def test_list_workspaces_reads_seeded_rows(client: TestClient) -> None:
     assert payload["items"][0]["role"] == "owner"
 
 
-def test_papers_and_scores_read_from_database(client: TestClient) -> None:
-    response = client.get("/papers")
+def test_papers_and_scores_read_from_database(
+    client: TestClient,
+    auth_headers: Callable[..., dict[str, str]],
+) -> None:
+    headers = auth_headers(workspace_id=DEMO_WORKSPACE_ID)
+    response = client.get("/papers", headers=headers)
 
     assert response.status_code == 200
     payload = response.json()
@@ -163,8 +180,8 @@ def test_papers_and_scores_read_from_database(client: TestClient) -> None:
     first_paper = payload["items"][0]
     assert first_paper["arxiv_id"].startswith("2603.")
 
-    score_response = client.get(f"/papers/{first_paper['id']}/scores")
+    score_response = client.get(f"/papers/{first_paper['id']}/scores", headers=headers)
     assert score_response.status_code == 200
     scores = score_response.json()
     assert scores
-    assert scores[0]["workspace_id"] == "00000000-0000-0000-0000-000000000201"
+    assert scores[0]["workspace_id"] == DEMO_WORKSPACE_ID
